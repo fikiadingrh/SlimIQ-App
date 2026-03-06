@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SlimIQ — AI Diet Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════
+   COLOR TOKENS — Light Blue Theme
+═══════════════════════════ */
+:root{
+  /* backgrounds */
+  --bg:       #f0f6ff;
+  --bg2:      #e4effe;
+  --surface:  #ffffff;
+  --surface2: #f7f9ff;
+  --card:     #ffffff;
+
+  /* blues */
+  --blue:     #2563eb;
+  --blue2:    #3b82f6;
+  --blue3:    #60a5fa;
+  --blue-lt:  #dbeafe;
+  --blue-glow:rgba(59,130,246,0.2);
+  --navy:     #1e3a5f;
+
+  /* accents */
+  --teal:     #0d9488;
+  --teal2:    #14b8a6;
+  --green:    #10b981;
+  --green2:   #34d399;
+  --amber:    #f59e0b;
+  --amber2:   #fbbf24;
+  --coral:    #ef4444;
+  --coral2:   #f87171;
+  --purple:   #8b5cf6;
+
+  /* text */
+  --text:     #1e293b;
+  --text2:    #475569;
+  --text3:    #94a3b8;
+  --white:    #ffffff;
+
+  /* borders */
+  --border:   #e2e8f0;
+  --border2:  rgba(59,130,246,0.2);
+
+  --r:        16px;
+  --r-sm:     10px;
+  --shadow:   0 4px 24px rgba(37,99,235,0.08);
+  --shadow-md:0 8px 32px rgba(37,99,235,0.12);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--blue3);border-radius:2px}
+
+/* ══════════════ FLOATING SHAPES ══════════════ */
+.shape{position:fixed;border-radius:50%;pointer-events:none;filter:blur(70px);z-index:0;}
+.s1{width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,.12),transparent 70%);top:-150px;right:-100px;animation:drift 16s ease-in-out infinite alternate;}
+.s2{width:400px;height:400px;background:radial-gradient(circle,rgba(13,148,136,.08),transparent 70%);bottom:0;left:-100px;animation:drift 12s ease-in-out infinite alternate-reverse;}
+.s3{width:250px;height:250px;background:radial-gradient(circle,rgba(139,92,246,.07),transparent 70%);top:50%;right:20%;animation:drift 8s ease-in-out infinite alternate;}
+@keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,40px) scale(1.1);}}
+
+/* ══════════════ SETUP SCREEN ══════════════ */
+#setup{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  overflow-y:auto;padding:1rem;
+}
+.setup-wrap{
+  max-width:480px;width:100%;
+  position:relative;z-index:1;
+}
+
+/* brand */
+.s-brand{
+  font-family:'Nunito',sans-serif;
+  font-size:1.8rem;font-weight:900;
+  color:var(--blue);
+  margin-bottom:2rem;
+  letter-spacing:-0.5px;
+}
+.s-brand span{color:var(--teal);}
+
+/* step progress bar */
+.s-progress{
+  display:flex;gap:.4rem;margin-bottom:2rem;
+}
+.s-bar{
+  flex:1;height:4px;border-radius:2px;
+  background:var(--border);transition:all .4s;
+}
+.s-bar.done{background:var(--blue);}
+.s-bar.active{background:var(--blue2);flex:2;}
+
+/* steps */
+.stp{display:none;animation:slideUp .35s ease both;}
+.stp.on{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+/* CONVERSATIONAL STYLE */
+.s-bubble{
+  background:var(--surface);
+  border:1.5px solid var(--border2);
+  border-radius:20px 20px 20px 4px;
+  padding:1.1rem 1.3rem;
+  margin-bottom:1.2rem;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.s-bubble::before{
+  content:'';
+  position:absolute;left:-8px;top:16px;
+  border:8px solid transparent;
+  border-right-color:var(--border2);
+}
+.s-bubble::after{
+  content:'';
+  position:absolute;left:-6px;top:17px;
+  border:7px solid transparent;
+  border-right-color:var(--surface);
+}
+.s-ai-row{
+  display:flex;align-items:flex-start;gap:.75rem;
+  margin-bottom:1.5rem;
+}
+.s-ai-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+  box-shadow:0 4px 12px var(--blue-glow);
+}
+.s-ai-content{flex:1;}
+.s-ai-name{font-size:.65rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem;}
+.s-bubble-text{font-size:.88rem;color:var(--text2);line-height:1.7;}
+.s-bubble-text b{color:var(--text);font-weight:700;}
+
+/* step tag */
+.s-step-tag{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--blue);margin-bottom:.8rem;
+}
+.s-step-tag::before{
+  content:'';display:inline-block;width:18px;height:2px;
+  background:var(--blue);border-radius:1px;
+}
+
+/* input */
+.s-input{
+  width:100%;background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:12px;padding:.85rem 1.1rem;
+  color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.92rem;outline:none;
+  transition:all .2s;
+}
+.s-input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(59,130,246,.1);}
+.s-input::placeholder{color:var(--text3);}
+.s-input-wrap{position:relative;margin-bottom:1rem;}
+.s-input-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;}
+.s-input.with-icon{padding-left:2.8rem;}
+
+/* options grid */
+.s-opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem;}
+.s-opt{
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:14px;
+  padding:.9rem .8rem;text-align:center;
+  cursor:pointer;transition:all .22s;
+  user-select:none;
+}
+.s-opt:hover{border-color:var(--blue3);background:var(--blue-lt);}
+.s-opt.sel{
+  border-color:var(--blue);
+  background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(59,130,246,.05));
+  box-shadow:0 0 0 1px var(--blue2), var(--shadow);
+}
+.s-opt .so-icon{font-size:1.7rem;margin-bottom:.4rem;}
+.s-opt .so-label{font-size:.8rem;font-weight:700;color:var(--text);}
+.s-opt .so-sub{font-size:.67rem;color:var(--text3);margin-top:.1rem;}
+
+/* option list (vertical) */
+.s-opt-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem;}
+.s-opt-row{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:12px;padding:.8rem 1rem;
+  display:flex;align-items:center;gap:.9rem;
+  cursor:pointer;transition:all .22s;
+}
+.s-opt-row:hover{border-color:var(--blue3);}
+.s-opt-row.sel{border-color:var(--blue);background:rgba(37,99,235,.04);}
+.s-opt-row .sr-ico{font-size:1.25rem;}
+.s-opt-row .sr-label{font-size:.85rem;font-weight:700;flex:1;}
+.s-opt-row .sr-sub{font-size:.7rem;color:var(--text3);}
+.s-opt-row .sr-check{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;transition:all .2s;flex-shrink:0;
+}
+.s-opt-row.sel .sr-check{background:var(--blue);border-color:var(--blue);color:white;}
+
+/* range */
+.s-range-group{margin-bottom:1.2rem;}
+.s-range-label{display:flex;justify-content:space-between;font-size:.75rem;font-weight:600;color:var(--text3);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px;}
+.s-range-val{
+  font-family:'Nunito',sans-serif;
+  font-size:2.6rem;font-weight:900;
+  text-align:center;
+  color:var(--blue);
+  margin:.3rem 0;
+  line-height:1;
+}
+.s-range-val small{font-size:.95rem;font-weight:500;color:var(--text3);font-family:'Plus Jakarta Sans',sans-serif;}
+input[type=range]{
+  width:100%;height:6px;-webkit-appearance:none;
+  background:linear-gradient(90deg,var(--blue) var(--pct,50%),var(--border) var(--pct,50%));
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:white;border:3px solid var(--blue);
+  box-shadow:0 2px 8px var(--blue-glow);cursor:pointer;
+}
+
+/* textarea */
+.s-textarea{
+  width:100%;background:var(--surface);
+  border:2px solid var(--border);border-radius:12px;
+  padding:.85rem 1.1rem;color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;
+  outline:none;resize:none;height:100px;
+  transition:border-color .2s;line-height:1.6;
+}
+.s-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(59,130,246,.1);}
+.s-textarea::placeholder{color:var(--text3);}
+
+/* job chips */
+.job-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;}
+.jchip{
+  padding:.35rem .8rem;border-radius:100px;
+  border:2px solid var(--border);background:var(--surface);
+  color:var(--text2);font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:all .18s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  user-select:none;
+}
+.jchip:hover{border-color:var(--blue3);}
+.jchip.sel{background:var(--blue);border-color:var(--blue);color:white;}
+
+/* cond chips */
+.cond-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.2rem;}
+.cond-chip{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:12px;padding:.7rem .5rem;text-align:center;
+  cursor:pointer;transition:all .18s;
+}
+.cond-chip:hover{border-color:var(--blue3);}
+.cond-chip.sel{border-color:var(--blue);background:rgba(37,99,235,.06);}
+.cond-chip .cc-ico{font-size:1.3rem;}
+.cond-chip .cc-txt{font-size:.68rem;font-weight:700;color:var(--text2);margin-top:.2rem;}
+
+/* summary card */
+.summary-card{
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  border-radius:var(--r);padding:1.3rem;
+  color:white;margin-bottom:1.2rem;
+}
+.sc-name{font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;margin-bottom:.25rem;}
+.sc-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;}
+.sc-tag{
+  font-size:.68rem;font-weight:700;padding:.2rem .6rem;
+  border-radius:100px;background:rgba(255,255,255,.2);
+  border:1px solid rgba(255,255,255,.3);
+}
+.sc-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.8rem;}
+.sc-stat{background:rgba(255,255,255,.15);border-radius:10px;padding:.6rem;text-align:center;}
+.sc-stat-val{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;}
+.sc-stat-lbl{font-size:.6rem;opacity:.7;text-transform:uppercase;letter-spacing:.5px;}
+
+/* btns */
+.s-btn-row{display:flex;gap:.6rem;margin-top:1.2rem;}
+.s-btn{
+  flex:1;padding:.88rem;border-radius:12px;
+  border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.9rem;font-weight:700;transition:all .22s;
+}
+.s-btn-primary{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:white;box-shadow:0 4px 16px rgba(37,99,235,.3);
+}
+.s-btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.35);}
+.s-btn-ghost{
+  background:var(--surface);color:var(--text2);
+  border:2px solid var(--border);
+}
+.s-btn-ghost:hover{border-color:var(--blue3);}
+
+/* ══════════════ TOP NAV ══════════════ */
+.topnav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(37,99,235,.06);
+  padding:.7rem 1.2rem;
+  display:flex;align-items:center;gap:.6rem;
+}
+.nav-brand{
+  font-family:'Nunito',sans-serif;
+  font-size:1.3rem;font-weight:900;color:var(--blue);
+  flex-shrink:0;letter-spacing:-0.5px;
+}
+.nav-brand span{color:var(--teal);}
+.nav-user{
+  display:flex;align-items:center;gap:.4rem;
+  font-size:.75rem;font-weight:600;color:var(--text2);
+  flex-shrink:0;
+}
+.nav-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;color:white;font-weight:700;
+}
+.nav-pills{
+  display:flex;gap:.2rem;overflow-x:auto;scrollbar-width:none;flex:1;
+}
+.nav-pills::-webkit-scrollbar{display:none;}
+.npill{
+  padding:.38rem .8rem;border-radius:100px;
+  font-size:.72rem;font-weight:600;white-space:nowrap;
+  cursor:pointer;border:none;background:transparent;
+  color:var(--text3);transition:all .2s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.npill.active{
+  background:var(--blue);color:white;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.npill:hover:not(.active){background:var(--blue-lt);color:var(--blue);}
+.streak-tag{
+  display:flex;align-items:center;gap:.3rem;
+  background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(251,191,36,.1));
+  border:1.5px solid rgba(245,158,11,.3);
+  border-radius:100px;padding:.28rem .7rem;
+  font-size:.72rem;font-weight:700;color:var(--amber);
+  flex-shrink:0;margin-left:auto;
+}
+
+/* ══════════════ MAIN LAYOUT ══════════════ */
+#app{display:none;min-height:100vh;position:relative;z-index:1;}
+main{padding:1.2rem;max-width:860px;margin:0 auto;}
+.sec{display:none;}
+.sec.on{display:block;animation:slideUp .3s ease both;}
+
+/* ══════════════ TYPOGRAPHY ══════════════ */
+.pg-eyebrow{
+  font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--blue);margin-bottom:.25rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.pg-eyebrow::before{content:'';display:inline-block;width:14px;height:2px;background:var(--blue);border-radius:1px;}
+.pg-h{
+  font-family:'Nunito',sans-serif;
+  font-size:1.8rem;font-weight:900;line-height:1.15;color:var(--text);
+  margin-bottom:1.2rem;
+}
+.pg-h em{font-style:italic;color:var(--blue);}
+
+/* ══════════════ CARDS ══════════════ */
+.card{
+  background:var(--card);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:1.15rem;
+  margin-bottom:.85rem;
+  box-shadow:var(--shadow);
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;}
+.card-title{font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:.45rem;color:var(--text);}
+.card-icon{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
+}
+
+/* ══════════════ BADGES ══════════════ */
+.tag{font-size:.62rem;font-weight:700;letter-spacing:.4px;padding:.2rem .6rem;border-radius:100px;text-transform:uppercase;}
+.tg{background:rgba(16,185,129,.12);color:#059669;border:1px solid rgba(16,185,129,.25);}
+.to{background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.25);}
+.tr{background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.25);}
+.tb{background:rgba(37,99,235,.12);color:var(--blue);border:1px solid rgba(37,99,235,.2);}
+.tp{background:rgba(139,92,246,.12);color:#7c3aed;border:1px solid rgba(139,92,246,.2);}
+.tt{background:rgba(13,148,136,.12);color:var(--teal);border:1px solid rgba(13,148,136,.2);}
+
+/* ══════════════ STAT BOXES ══════════════ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:.9rem;}
+.stat-box{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:1rem;
+  box-shadow:var(--shadow);transition:all .2s;
+  position:relative;overflow:hidden;
+}
+.stat-box::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  border-radius:0 0 var(--r) var(--r);
+  opacity:0;transition:opacity .3s;
+}
+.stat-box:hover::after{opacity:1;}
+.stat-box.sb-blue::after{background:var(--blue);}
+.stat-box.sb-teal::after{background:var(--teal);}
+.stat-box.sb-green::after{background:var(--green);}
+.stat-box:hover{border-color:var(--border2);}
+.sb-lbl{font-size:.62rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:.35rem;}
+.sb-val{font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;color:var(--text);line-height:1;}
+.sb-val small{font-size:.7rem;font-weight:500;color:var(--text3);}
+.sb-sub{font-size:.68rem;color:var(--text3);margin-top:.2rem;}
+.sb-delta{display:inline-flex;align-items:center;gap:.15rem;font-size:.68rem;font-weight:700;margin-top:.3rem;}
+.d-pos{color:var(--green);}
+.d-neg{color:var(--coral);}
+
+/* ══════════════ RING ══════════════ */
+.ring-wrap{display:flex;align-items:center;justify-content:center;}
+.ring-svg{transform:rotate(-90deg);overflow:visible;}
+.ring-bg{fill:none;stroke:var(--bg2);stroke-width:9;}
+.ring-fill{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1);}
+.ring-txt{font-family:'JetBrains Mono',monospace;font-size:.78rem;fill:var(--text);font-weight:600;}
+.ring-sub{font-size:.38rem;fill:var(--text3);font-family:'Plus Jakarta Sans',sans-serif;}
+
+/* ══════════════ CAL BARS ══════════════ */
+.cal-bar-row{margin-bottom:.55rem;}
+.cal-bar-top{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);margin-bottom:.25rem;}
+.cal-bar-top b{color:var(--text);font-weight:700;}
+.cal-bar-bg{height:7px;border-radius:4px;background:var(--bg2);}
+.cal-bar-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+.fb{background:linear-gradient(90deg,var(--teal),var(--teal2));}
+.fp{background:linear-gradient(90deg,var(--blue),var(--blue3));}
+.ff{background:linear-gradient(90deg,var(--amber),var(--amber2));}
+.fr{background:linear-gradient(90deg,var(--coral),var(--coral2));}
+
+/* ══════════════ ACTION ITEMS ══════════════ */
+.act-stack{display:flex;flex-direction:column;gap:.5rem;}
+.act-item{
+  display:flex;align-items:flex-start;gap:.75rem;
+  background:var(--surface2);border:1.5px solid transparent;
+  border-radius:12px;padding:.8rem;cursor:pointer;transition:all .2s;
+}
+.act-item:hover{border-color:var(--border2);transform:translateX(2px);}
+.act-item.done{opacity:.55;}
+.act-item.done .act-title{text-decoration:line-through;}
+.act-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.act-body{flex:1;}
+.act-title{font-size:.83rem;font-weight:700;color:var(--text);line-height:1.3;}
+.act-desc{font-size:.7rem;color:var(--text3);margin-top:.12rem;line-height:1.5;}
+.act-chk{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;flex-shrink:0;margin-top:.1rem;transition:all .2s;
+}
+.act-item.done .act-chk{background:var(--green);border-color:var(--green);color:white;}
+
+/* ══════════════ CHART ══════════════ */
+.chart-wrap{position:relative;height:110px;margin:.7rem 0 .3rem;}
+.mini-svg{width:100%;height:100%;}
+.c-line{fill:none;stroke:var(--blue2);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.c-area{fill:url(#cgrad);}
+.c-dot{fill:var(--blue);stroke:white;stroke-width:2.5;}
+.chart-labels{display:flex;justify-content:space-between;font-size:.62rem;color:var(--text3);}
+
+/* ══════════════ FOOD ══════════════ */
+.food-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;}
+.food-tile{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:12px;padding:.7rem;
+  display:flex;align-items:center;gap:.65rem;
+  cursor:pointer;transition:all .2s;
+}
+.food-tile:hover{border-color:var(--blue3);background:var(--blue-lt);}
+.food-tile:active{transform:scale(.97);}
+.fe{font-size:1.25rem;}
+.fn{font-size:.77rem;font-weight:700;color:var(--text);}
+.fc{font-size:.67rem;color:var(--text3);}
+.fc b{color:var(--teal);font-weight:700;}
+.fadd{
+  margin-left:auto;width:24px;height:24px;border-radius:50%;
+  background:var(--blue);color:white;border:none;
+  font-size:.9rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .15s;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(37,99,235,.3);
+}
+.fadd:hover{transform:scale(1.2);}
+
+/* LOG */
+.log-item{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.5rem .7rem;background:var(--surface2);
+  border-radius:9px;font-size:.78rem;border:1px solid var(--border);
+}
+.log-item .lname{flex:1;font-weight:600;}
+.log-item .lcal{font-size:.7rem;color:var(--text3);}
+.log-item .ldel{cursor:pointer;color:var(--coral);font-size:.75rem;padding:.1rem .3rem;}
+
+/* ══════════════ FASTING ══════════════ */
+.fast-hero{
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  border-radius:var(--r);padding:1.8rem 1.2rem;
+  text-align:center;margin-bottom:.9rem;color:white;
+  box-shadow:0 8px 32px rgba(37,99,235,.25);
+}
+.fast-status-tag{font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:.5rem;}
+.fast-clock{
+  font-family:'JetBrains Mono',monospace;
+  font-size:3rem;font-weight:600;letter-spacing:-2px;line-height:1;
+  margin:.4rem 0;
+}
+.fast-phase-lbl{font-size:.78rem;opacity:.8;}
+.fast-phase-lbl b{opacity:1;font-weight:800;}
+.fast-prog-bar{height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:1rem auto .3rem;max-width:260px;}
+.fast-prog-fill{height:100%;border-radius:2px;background:rgba(255,255,255,.8);transition:width .5s;}
+.fast-pct{font-size:.67rem;opacity:.6;}
+
+.ft-list{display:flex;flex-direction:column;gap:.5rem;}
+.ft{
+  background:var(--surface2);border:2px solid var(--border);
+  border-radius:12px;padding:.9rem 1rem;
+  display:flex;align-items:center;gap:.9rem;cursor:pointer;transition:all .2s;
+}
+.ft:hover{border-color:var(--blue3);}
+.ft.sel{border-color:var(--blue);background:rgba(37,99,235,.04);box-shadow:0 0 0 1px rgba(37,99,235,.1);}
+.ft-ico{font-size:1.25rem;}
+.ft-name{font-size:.83rem;font-weight:700;color:var(--text);}
+.ft-desc{font-size:.69rem;color:var(--text3);margin-top:.1rem;}
+.ft-hrs{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:var(--blue);flex-shrink:0;}
+
+/* ══════════════ ALERTS ══════════════ */
+.alert{border-radius:12px;padding:.9rem 1.1rem;margin-bottom:.7rem;display:flex;align-items:flex-start;gap:.75rem;border:1.5px solid;}
+.al-d{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.2);}
+.al-w{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2);}
+.al-i{background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.15);}
+.al-s{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.2);}
+.al-ico{font-size:1.1rem;flex-shrink:0;margin-top:.1rem;}
+.al-title{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.18rem;}
+.al-desc{font-size:.72rem;color:var(--text2);line-height:1.6;}
+
+/* ══════════════ BMI TRACK ══════════════ */
+.bmi-wrap{position:relative;height:10px;border-radius:5px;margin:1rem 0 .5rem;
+  background:linear-gradient(90deg,#3b82f6 0%,#10b981 25%,#f59e0b 55%,#ef4444 100%);}
+.bmi-pin{position:absolute;top:-5px;width:20px;height:20px;border-radius:50%;
+  background:white;border:3px solid var(--blue);transform:translateX(-50%);
+  transition:left 1s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 2px 8px rgba(37,99,235,.4);}
+.bmi-axis{display:flex;justify-content:space-between;font-size:.6rem;color:var(--text3);}
+
+/* ══════════════ INSIGHTS ══════════════ */
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.9rem;}
+.ins-box{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:12px;padding:.85rem;box-shadow:var(--shadow);
+}
+.ins-e{font-size:1.1rem;margin-bottom:.3rem;}
+.ins-l{font-size:.6rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;}
+.ins-v{font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;color:var(--text);margin-top:.12rem;}
+
+/* ══════════════ TIMELINE ══════════════ */
+.timeline{position:relative;padding-left:1.4rem;}
+.timeline::before{content:'';position:absolute;left:.35rem;top:0;bottom:0;width:1.5px;background:linear-gradient(to bottom,var(--blue),var(--bg2));}
+.tl-item{position:relative;margin-bottom:1rem;}
+.tl-dot{position:absolute;left:-1.2rem;top:.2rem;width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.2);}
+.tl-dot.future{background:var(--border);box-shadow:none;}
+.tl-week{font-size:.63rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.tl-event{font-size:.82rem;font-weight:700;color:var(--text);margin-top:.1rem;}
+.tl-note{font-size:.7rem;color:var(--text3);margin-top:.1rem;}
+
+/* ══════════════ MACROS ══════════════ */
+.macro-row{display:flex;align-items:center;gap:1.2rem;}
+.macro-legend{flex:1;display:flex;flex-direction:column;gap:.5rem;}
+.ml-item{display:flex;align-items:center;gap:.5rem;font-size:.77rem;}
+.ml-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.ml-name{color:var(--text3);flex:1;}
+.ml-val{font-weight:700;color:var(--text);}
+
+/* ══════════════ TIPS ══════════════ */
+.tip-chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.9rem;}
+.tchip{
+  padding:.28rem .72rem;border-radius:100px;font-size:.72rem;font-weight:600;
+  cursor:pointer;transition:all .18s;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text3);
+}
+.tchip.on{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 2px 8px rgba(37,99,235,.25);}
+
+.tip-list{display:flex;flex-direction:column;gap:.65rem;}
+.tip-box{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:12px;padding:1rem;
+  display:flex;gap:.85rem;align-items:flex-start;
+  box-shadow:var(--shadow);transition:all .2s;
+}
+.tip-box:hover{border-color:var(--border2);}
+.tip-num{
+  font-family:'Nunito',sans-serif;font-size:1.6rem;font-weight:900;
+  color:rgba(37,99,235,.15);line-height:1;min-width:1.8rem;
+}
+.tip-title{font-size:.84rem;font-weight:700;color:var(--text);margin-bottom:.22rem;}
+.tip-body{font-size:.74rem;color:var(--text2);line-height:1.65;}
+
+/* ══════════════ QUOTES ══════════════ */
+.qhero{
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  border-radius:var(--r);padding:2rem 1.5rem;
+  text-align:center;margin-bottom:.9rem;color:white;
+  box-shadow:0 8px 32px rgba(37,99,235,.2);
+  position:relative;overflow:hidden;
+}
+.qhero::before{
+  content:'"';position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  font-family:'Nunito',sans-serif;font-size:16rem;font-weight:900;
+  color:rgba(255,255,255,.06);line-height:1;pointer-events:none;
+}
+.q-cat-tag{
+  display:inline-block;font-size:.63rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:.22rem .75rem;border-radius:100px;
+  border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);
+  margin-bottom:.9rem;color:rgba(255,255,255,.9);
+}
+.q-text{font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:800;line-height:1.6;margin-bottom:.8rem;position:relative;z-index:1;}
+.q-src{font-size:.75rem;opacity:.75;margin-bottom:.4rem;}
+.q-ctx{
+  font-size:.72rem;opacity:.7;line-height:1.65;max-width:460px;margin:0 auto;
+  padding:.65rem;background:rgba(0,0,0,.12);border-radius:8px;text-align:left;
+}
+.q-refresh-btn{
+  margin-top:.9rem;padding:.5rem 1.3rem;border-radius:100px;
+  border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);
+  color:white;font-size:.73rem;font-weight:700;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.q-refresh-btn:hover{background:rgba(255,255,255,.2);}
+
+.qcats{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem;}
+.qcat{
+  padding:.28rem .75rem;border-radius:100px;font-size:.71rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--text3);transition:all .18s;
+}
+.qcat.on{background:var(--blue);border-color:var(--blue);color:white;}
+
+.q-list{display:flex;flex-direction:column;gap:.6rem;}
+.q-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:12px;
+  padding:1rem;display:flex;gap:.8rem;box-shadow:var(--shadow);transition:all .2s;
+}
+.q-card:hover{border-color:var(--border2);}
+.q-card-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.q-card-tag{font-size:.62rem;font-weight:700;letter-spacing:.7px;text-transform:uppercase;margin-bottom:.28rem;}
+.q-card-text{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.5;font-style:italic;}
+.q-card-src{font-size:.67rem;color:var(--text3);margin-top:.22rem;}
+.q-card-lesson{font-size:.71rem;color:var(--text2);margin-top:.38rem;line-height:1.55;padding:.4rem .6rem;background:var(--surface2);border-radius:7px;border-left:2.5px solid var(--blue3);}
+
+/* ══════════════ AI CHAT ══════════════ */
+.ai-chat-wrap{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+  margin-bottom:.9rem;box-shadow:var(--shadow);
+}
+.ai-chat-head{
+  padding:.9rem 1.1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.65rem;
+  background:linear-gradient(135deg,rgba(37,99,235,.04),rgba(13,148,136,.03));
+}
+.ai-av{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+  box-shadow:0 3px 8px var(--blue-glow);
+}
+.ai-nm{font-size:.85rem;font-weight:700;color:var(--text);}
+.ai-st{font-size:.67rem;color:var(--green);display:flex;align-items:center;gap:.22rem;}
+.ai-st::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);}
+.ai-msgs{padding:.9rem;min-height:100px;max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;}
+.ai-msg{max-width:85%;padding:.7rem 1rem;border-radius:12px;font-size:.8rem;line-height:1.6;}
+.ai-msg.bot{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;border-radius:12px 12px 12px 3px;color:var(--text);}
+.ai-msg.user{background:var(--blue);border-color:var(--blue);align-self:flex-end;color:white;border-radius:12px 12px 3px 12px;}
+.ai-msg.typing{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;}
+.typing-dots{display:flex;gap:.3rem;padding:.2rem 0;}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:tdot .9s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.15s;}
+.typing-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+.ai-qbtns{display:flex;flex-wrap:wrap;gap:.35rem;padding:.5rem .9rem .7rem;border-top:1px solid var(--border);}
+.ai-qbtn{
+  font-size:.69rem;padding:.28rem .65rem;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--surface2);
+  color:var(--text3);cursor:pointer;transition:all .18s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.ai-qbtn:hover{border-color:var(--blue3);color:var(--blue);background:var(--blue-lt);}
+.ai-inp-row{padding:.7rem .9rem;border-top:1px solid var(--border);display:flex;gap:.5rem;}
+.ai-inp{
+  flex:1;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:9px;padding:.55rem .85rem;color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s;
+}
+.ai-inp:focus{border-color:var(--blue);}
+.ai-inp::placeholder{color:var(--text3);}
+.ai-send{
+  padding:.55rem .9rem;border-radius:9px;border:none;
+  background:var(--blue);color:white;font-size:.85rem;cursor:pointer;transition:all .2s;
+  box-shadow:0 2px 6px rgba(37,99,235,.3);
+}
+.ai-send:hover{transform:scale(1.05);}
+
+/* ══════════════ DAPUR ══════════════ */
+.mode-tabs{
+  display:flex;gap:.3rem;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:12px;padding:.3rem;margin-bottom:1rem;
+}
+.mode-tab{
+  flex:1;padding:.42rem;border-radius:9px;border:none;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:.72rem;font-weight:700;
+  cursor:pointer;transition:all .18s;background:transparent;color:var(--text3);
+}
+.mode-tab.on{background:var(--blue);color:white;box-shadow:0 2px 6px rgba(37,99,235,.25);}
+
+.ing-search-wrap{position:relative;margin-bottom:.7rem;}
+.ing-search{
+  width:100%;background:var(--surface);border:2px solid var(--border);
+  border-radius:11px;padding:.72rem 1rem .72rem 2.6rem;
+  color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.85rem;outline:none;transition:all .2s;
+}
+.ing-search:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.08);}
+.ing-search::placeholder{color:var(--text3);}
+.ing-search-icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);font-size:.85rem;pointer-events:none;}
+.ing-ac{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
+  background:white;border:1.5px solid var(--border);border-radius:12px;
+  overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.12);
+  display:none;max-height:200px;overflow-y:auto;
+}
+.ing-ac.open{display:block;}
+.ing-ac-item{
+  padding:.6rem 1rem;font-size:.8rem;cursor:pointer;transition:background .15s;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.ing-ac-item:last-child{border-bottom:none;}
+.ing-ac-item:hover{background:var(--blue-lt);}
+.ing-ac-name{font-weight:600;color:var(--text);}
+.ing-ac-cal{font-size:.68rem;color:var(--teal);font-weight:700;}
+
+.ing-tags-area{
+  display:flex;flex-wrap:wrap;gap:.4rem;min-height:46px;padding:.5rem;
+  background:var(--surface2);border:1.5px dashed var(--border2);
+  border-radius:11px;margin-bottom:.7rem;align-content:flex-start;
+}
+.ing-tags-area.empty::before{
+  content:'Bahan yang ditambahkan muncul di sini...';
+  color:var(--text3);font-size:.73rem;display:flex;align-items:center;padding:.2rem .3rem;
+}
+.ing-tag{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:var(--blue-lt);border:1.5px solid rgba(37,99,235,.25);
+  border-radius:100px;padding:.28rem .7rem .28rem .55rem;
+  font-size:.73rem;font-weight:700;color:var(--blue);
+  animation:popIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+.ing-tag-gram{font-size:.63rem;color:var(--text3);background:rgba(37,99,235,.1);border-radius:100px;padding:.03rem .33rem;}
+.ing-tag-del{cursor:pointer;color:var(--text3);font-size:.78rem;transition:color .15s;line-height:1;}
+.ing-tag-del:hover{color:var(--coral);}
+
+.portion-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem;flex-wrap:wrap;}
+.portion-lbl{font-size:.73rem;color:var(--text3);white-space:nowrap;}
+.portion-inp{
+  width:68px;background:var(--surface);border:2px solid var(--border);border-radius:9px;
+  padding:.48rem .6rem;color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:.83rem;text-align:center;outline:none;transition:border-color .2s;
+}
+.portion-inp:focus{border-color:var(--blue);}
+.s-btns{display:flex;gap:.3rem;flex-wrap:wrap;}
+.sbtn{
+  padding:.26rem .6rem;border-radius:100px;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:700;
+  cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.sbtn:hover,.sbtn.on{background:var(--blue);border-color:var(--blue);color:white;}
+
+.analyze-btn{
+  width:100%;padding:.95rem;background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border:none;border-radius:12px;color:white;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.9rem;font-weight:800;cursor:pointer;transition:all .22s;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  box-shadow:0 4px 16px rgba(37,99,235,.3);
+}
+.analyze-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.35);}
+.analyze-btn.loading{opacity:.7;pointer-events:none;}
+.analyze-btn .spin{animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* RESULT */
+.result-card{
+  background:linear-gradient(135deg,rgba(16,185,129,.07),rgba(13,148,136,.05));
+  border:1.5px solid rgba(16,185,129,.2);
+  border-radius:var(--r);padding:1.2rem;margin-bottom:.85rem;
+  animation:slideUp .4s ease both;
+}
+.res-dish-name{font-family:'Nunito',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:.2rem;}
+.res-desc{font-size:.76rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;}
+.kcal-hero{display:flex;align-items:flex-end;gap:.4rem;margin-bottom:.9rem;}
+.kcal-big{font-family:'Nunito',sans-serif;font-size:2.8rem;font-weight:900;line-height:1;color:var(--teal);}
+.kcal-unit{font-size:.82rem;color:var(--text3);margin-bottom:.35rem;}
+.kcal-pct-box{margin-left:auto;text-align:right;}
+.kcal-pct{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--blue);}
+.kcal-pct-lbl{font-size:.62rem;color:var(--text3);}
+
+.nutri-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.9rem;}
+.nutri-box{background:white;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .4rem;text-align:center;box-shadow:var(--shadow);}
+.nutri-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;line-height:1;margin-bottom:.12rem;}
+.nutri-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+.nutri-bar-m{height:3px;border-radius:2px;background:var(--bg2);margin-top:.25rem;overflow:hidden;}
+.nutri-bar-mf{height:100%;border-radius:2px;}
+
+.vit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem;margin-bottom:.9rem;}
+.vit-item{display:flex;align-items:center;gap:.5rem;padding:.48rem .65rem;background:white;border:1.5px solid var(--border);border-radius:9px;}
+.vit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.vit-name{font-size:.68rem;color:var(--text3);flex:1;}
+.vit-val{font-size:.73rem;font-weight:700;color:var(--text);}
+
+.diet-score-row{display:flex;align-items:center;gap:.75rem;padding:.7rem;background:white;border:1.5px solid var(--border);border-radius:10px;margin-bottom:.65rem;}
+.score-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;flex-shrink:0;border:2.5px solid;}
+.score-txt{font-size:.77rem;color:var(--text2);line-height:1.6;}
+.score-txt b{color:var(--text);}
+
+.ai-recipe-tip{
+  background:rgba(37,99,235,.05);border:1.5px solid rgba(37,99,235,.15);
+  border-left:3px solid var(--blue);
+  border-radius:10px;padding:.85rem 1rem;
+  font-size:.77rem;color:var(--text2);line-height:1.75;margin-bottom:.65rem;
+}
+.ai-recipe-tip b{color:var(--text);}
+
+/* RECIPE CARD */
+.recipe-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  overflow:hidden;margin-bottom:.7rem;transition:all .2s;cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.recipe-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.recipe-card-h{padding:.95rem 1.1rem .65rem;display:flex;gap:.75rem;}
+.rec-emoji{font-size:2rem;flex-shrink:0;}
+.rec-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:.97rem;color:var(--text);line-height:1.3;}
+.rec-sub{font-size:.7rem;color:var(--text3);margin-top:.15rem;}
+.recipe-meta{display:flex;gap:.5rem;padding:.6rem 1.1rem;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;}
+.rmeta{display:flex;align-items:center;gap:.28rem;font-size:.67rem;color:var(--text3);}
+.rmeta b{color:var(--text);font-weight:700;}
+
+/* SUGGEST */
+.sug-chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem;}
+.sug-chip{
+  padding:.3rem .72rem;border-radius:100px;font-size:.71rem;font-weight:600;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--surface);
+  color:var(--text3);transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.sug-chip:hover{border-color:var(--blue3);color:var(--blue);}
+.quick-chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem;}
+.qchip{
+  padding:.27rem .65rem;border-radius:100px;font-size:.71rem;font-weight:600;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--surface);
+  color:var(--text2);transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.qchip:hover{border-color:var(--teal2);color:var(--teal);}
+
+/* MODAL */
+#recipeModal{position:fixed;inset:0;z-index:500;background:rgba(240,246,255,.97);backdrop-filter:blur(8px);overflow-y:auto;padding:1.5rem;}
+
+/* ══════════════ NOTIF PILL ══════════════ */
+.notif-pill{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);
+  border-radius:100px;padding:.28rem .75rem;
+  font-size:.7rem;font-weight:700;color:var(--coral);
+  margin-bottom:.8rem;animation:pulsered 2.5s infinite;
+}
+@keyframes pulsered{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.2);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+
+/* ══════════════ AVOID LIST ══════════════ */
+.avoid-item{display:flex;align-items:flex-start;gap:.75rem;background:rgba(239,68,68,.04);border:1.5px solid rgba(239,68,68,.12);border-radius:10px;padding:.7rem;margin-bottom:.5rem;}
+.avoid-ico{font-size:1.15rem;}
+.avoid-name{font-size:.8rem;font-weight:700;color:var(--text);}
+.avoid-cal{font-size:.67rem;color:var(--coral);font-weight:600;}
+.avoid-reason{font-size:.68rem;color:var(--text3);margin-top:.13rem;line-height:1.5;}
+
+/* ══════════════ RISK ROWS ══════════════ */
+.risk-row{display:flex;align-items:center;gap:.6rem;padding:.52rem .72rem;background:var(--surface2);border-radius:9px;margin-bottom:.4rem;font-size:.78rem;color:var(--text);}
+.risk-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══════════════ DAILY TIP ══════════════ */
+.daily-tip-box{
+  background:rgba(37,99,235,.05);border:1.5px solid rgba(37,99,235,.15);
+  border-left:3px solid var(--blue);
+  border-radius:11px;padding:.85rem 1rem;
+  font-size:.8rem;color:var(--text2);line-height:1.75;
+}
+.daily-tip-box b{color:var(--text);}
+
+/* ══════════════ TOAST ══════════════ */
+.toast{
+  position:fixed;bottom:2rem;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--blue);color:white;
+  padding:.65rem 1.4rem;border-radius:100px;
+  font-size:.82rem;font-weight:700;z-index:9998;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 8px 24px rgba(37,99,235,.35);
+  white-space:nowrap;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ══════════════ RESPONSIVE ══════════════ */
+@media(max-width:480px){
+  .stat-grid{grid-template-columns:repeat(3,1fr);}
+  .sb-val{font-size:1.25rem;}
+  .fast-clock{font-size:2.4rem;}
+  .pg-h{font-size:1.5rem;}
+  .nutri-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div>
+
+<!-- ══════════════════════════════════════
+     SETUP — CONVERSATIONAL ONBOARDING
+══════════════════════════════════════ -->
+<div id="setup">
+<div class="setup-wrap">
+  <div class="s-brand">SlimIQ<span>.</span></div>
+  <div class="s-progress" id="sProgress">
+    <div class="s-bar active"></div>
+    <div class="s-bar"></div>
+    <div class="s-bar"></div>
+    <div class="s-bar"></div>
+    <div class="s-bar"></div>
+    <div class="s-bar"></div>
+    <div class="s-bar"></div>
+  </div>
+
+  <!-- STEP 1 – WELCOME + NAMA -->
+  <div class="stp on" id="stp1">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text">
+            Halo! 👋 Saya <b>SlimIQ AI Coach</b>mu.<br><br>
+            Sebelum kita mulai, boleh saya tahu <b>nama kamu</b> supaya bisa lebih personal? 😊
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="s-input-wrap">
+      <div class="s-input-icon">👤</div>
+      <input class="s-input with-icon" id="inputName" type="text" placeholder="Masukkan nama kamu..." maxlength="40" onkeydown="if(event.key==='Enter')goStp(2)">
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-primary" onclick="goStp(2)">Halo! →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 – CERITA AKTIVITAS -->
+  <div class="stp" id="stp2">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text" id="bubble2">
+            Senang bertemu kamu! 🎉<br><br>
+            Ceritakan sedikit tentang <b>keseharian kamu</b> — apa yang kamu rasakan dan apa yang ingin kamu capai?
+          </div>
+        </div>
+      </div>
+    </div>
+    <textarea class="s-textarea" id="inputStory" placeholder="Contoh: Saya sering merasa capek, berat badan naik sejak 2 tahun lalu, ingin lebih bugar dan percaya diri..." maxlength="300"></textarea>
+    <div style="font-size:.68rem;color:var(--text3);text-align:right;margin-top:.25rem;" id="storyCount">0 / 300</div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(1)">← Kembali</button>
+      <button class="s-btn s-btn-primary" onclick="goStp(3)">Lanjut →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 – PEKERJAAN / AKTIVITAS HARIAN -->
+  <div class="stp" id="stp3">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text">
+            Sip! Sekarang bantu saya pahami <b>pola aktivitas harianmu</b>. Apa jenis pekerjaanmu? 💼
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="s-step-tag">Pilih yang paling sesuai</div>
+    <div class="s-opt-list" id="jobList">
+      <div class="s-opt-row" onclick="pickJob(this,'desk','💻','Pekerja Kantoran / Depan Komputer','Duduk 6–8 jam/hari, minim gerak')">
+        <span class="sr-ico">💻</span>
+        <div><div class="sr-label">Pekerja Kantoran / Komputer</div><div class="sr-sub">Duduk 6–8 jam/hari, minim gerak</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'driver','🚗','Pengemudi / Kurir Kendaraan','Duduk lama, mobilitas tinggi')">
+        <span class="sr-ico">🚗</span>
+        <div><div class="sr-label">Pengemudi / Kurir Kendaraan</div><div class="sr-sub">Duduk lama, mobilitas tinggi</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'courier','🏃','Kurir Paket / Lapangan','Banyak berjalan & angkat barang')">
+        <span class="sr-ico">🏃</span>
+        <div><div class="sr-label">Kurir Paket / Lapangan</div><div class="sr-sub">Banyak berjalan & angkat barang</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'teacher','🎓','Guru / Pengajar','Berdiri mengajar, aktivitas sedang')">
+        <span class="sr-ico">🎓</span>
+        <div><div class="sr-label">Guru / Pengajar</div><div class="sr-sub">Berdiri mengajar, aktivitas sedang</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'homemaker','🏠','Ibu Rumah Tangga','Aktif di rumah, bersih-bersih, memasak')">
+        <span class="sr-ico">🏠</span>
+        <div><div class="sr-label">Ibu/Bapak Rumah Tangga</div><div class="sr-sub">Aktif di rumah, bersih-bersih, memasak</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'labor','⚒️','Pekerja Fisik / Buruh','Kerja keras fisik sepanjang hari')">
+        <span class="sr-ico">⚒️</span>
+        <div><div class="sr-label">Pekerja Fisik / Buruh</div><div class="sr-sub">Kerja keras fisik sepanjang hari</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'student','📚','Pelajar / Mahasiswa','Duduk belajar, aktivitas ringan-sedang')">
+        <span class="sr-ico">📚</span>
+        <div><div class="sr-label">Pelajar / Mahasiswa</div><div class="sr-sub">Duduk belajar, aktivitas ringan-sedang</div></div>
+        <div class="sr-check"></div>
+      </div>
+      <div class="s-opt-row" onclick="pickJob(this,'health','🏥','Tenaga Kesehatan','Berdiri & berjalan sepanjang shift')">
+        <span class="sr-ico">🏥</span>
+        <div><div class="sr-label">Tenaga Kesehatan</div><div class="sr-sub">Berdiri & berjalan sepanjang shift</div></div>
+        <div class="sr-check"></div>
+      </div>
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(2)">← Kembali</button>
+      <button class="s-btn s-btn-primary" onclick="goStp(4)">Lanjut →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 – USIA, BB, TB -->
+  <div class="stp" id="stp4">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text">
+            Mantap! Sekarang saya perlu data fisikmu untuk kalkulasi <b>kalori harian</b> dan <b>BMI</b> yang akurat 📊
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="s-range-group">
+      <div class="s-range-label"><span>Usia</span></div>
+      <div class="s-range-val" id="rvA">30 <small>tahun</small></div>
+      <input type="range" min="14" max="80" value="30" oninput="slChg('rvA',this.value,'tahun','A',this)" id="rA">
+    </div>
+    <div class="s-range-group">
+      <div class="s-range-label"><span>Berat Badan Sekarang</span></div>
+      <div class="s-range-val" id="rvW">75 <small>kg</small></div>
+      <input type="range" min="30" max="180" value="75" oninput="slChg('rvW',this.value,'kg','W',this)" id="rW">
+    </div>
+    <div class="s-range-group">
+      <div class="s-range-label"><span>Tinggi Badan</span></div>
+      <div class="s-range-val" id="rvH">165 <small>cm</small></div>
+      <input type="range" min="130" max="215" value="165" oninput="slChg('rvH',this.value,'cm','H',this)" id="rH">
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(3)">← Kembali</button>
+      <button class="s-btn s-btn-primary" onclick="goStp(5)">Lanjut →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5 – GOAL + TARGET -->
+  <div class="stp" id="stp5">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text">
+            Sebentar lagi selesai! 💪 Apa <b>tujuan utama</b> kamu dan berapa target berat idealmu?
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="s-opt-grid">
+      <div class="s-opt" onclick="pickOpt(this,'goal','turun')"><div class="so-icon">📉</div><div class="so-label">Turun Berat</div><div class="so-sub">Kurangi lemak</div></div>
+      <div class="s-opt" onclick="pickOpt(this,'goal','jaga')"><div class="so-icon">⚖️</div><div class="so-label">Jaga Berat</div><div class="so-sub">Ideal stabil</div></div>
+      <div class="s-opt" onclick="pickOpt(this,'goal','stamina')"><div class="so-icon">⚡</div><div class="so-label">Lebih Bertenaga</div><div class="so-sub">Diet + energi</div></div>
+      <div class="s-opt" onclick="pickOpt(this,'goal','sehat')"><div class="so-icon">💚</div><div class="so-label">Hidup Sehat</div><div class="so-sub">Gaya hidup</div></div>
+    </div>
+    <div class="s-range-group">
+      <div class="s-range-label"><span>Target Berat Badan</span></div>
+      <div class="s-range-val" id="rvT">65 <small>kg</small></div>
+      <input type="range" min="30" max="180" value="65" oninput="slChg('rvT',this.value,'kg','T',this)" id="rT">
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(4)">← Kembali</button>
+      <button class="s-btn s-btn-primary" onclick="goStp(6)">Lanjut →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6 – KONDISI KESEHATAN -->
+  <div class="stp" id="stp6">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text">
+            Ada <b>kondisi kesehatan tertentu</b> yang perlu saya perhatikan? Ini penting agar saran saya aman untukmu. 🏥
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cond-grid">
+      <div class="cond-chip" onclick="togCond(this,'normal')"><div class="cc-ico">✅</div><div class="cc-txt">Sehat Normal</div></div>
+      <div class="cond-chip" onclick="togCond(this,'diabetes')"><div class="cc-ico">🩸</div><div class="cc-txt">Diabetes</div></div>
+      <div class="cond-chip" onclick="togCond(this,'hipertensi')"><div class="cc-ico">💊</div><div class="cc-txt">Hipertensi</div></div>
+      <div class="cond-chip" onclick="togCond(this,'kolesterol')"><div class="cc-ico">🫀</div><div class="cc-txt">Kolesterol</div></div>
+      <div class="cond-chip" onclick="togCond(this,'asam')"><div class="cc-ico">🌿</div><div class="cc-txt">Asam Urat</div></div>
+      <div class="cond-chip" onclick="togCond(this,'maag')"><div class="cc-ico">😮‍💨</div><div class="cc-txt">Maag/GERD</div></div>
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(5)">← Kembali</button>
+      <button class="s-btn s-btn-primary" onclick="goStp(7)">Lanjut →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7 – SUMMARY + KONFIRMASI -->
+  <div class="stp" id="stp7">
+    <div class="s-ai-row">
+      <div class="s-ai-avatar">🤖</div>
+      <div class="s-ai-content">
+        <div class="s-ai-name">SlimIQ AI</div>
+        <div class="s-bubble">
+          <div class="s-bubble-text" id="bubble7">
+            Luar biasa! Saya sudah siapkan profil personalmu. Cek dulu ya, apakah sudah sesuai? 🎯
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="summary-card" id="summaryCard">
+      <div class="sc-name" id="scName">—</div>
+      <div class="sc-row" id="scTags"></div>
+      <div style="font-size:.78rem;opacity:.85;line-height:1.6;" id="scStory"></div>
+      <div class="sc-stat-row">
+        <div class="sc-stat"><div class="sc-stat-val" id="scBMI">—</div><div class="sc-stat-lbl">BMI</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" id="scKcal">—</div><div class="sc-stat-lbl">kkal/hari</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" id="scWeeks">—</div><div class="sc-stat-lbl">minggu</div></div>
+      </div>
+    </div>
+    <div class="s-btn-row">
+      <button class="s-btn s-btn-ghost" onclick="goStp(6)">← Edit</button>
+      <button class="s-btn s-btn-primary" onclick="finishSetup()">🚀 Mulai SlimIQ!</button>
+    </div>
+  </div>
+
+</div><!-- end setup-wrap -->
+</div><!-- end setup -->
+
+<!-- ══════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════ -->
+<div id="app">
+<nav class="topnav">
+  <div class="nav-brand">SlimIQ<span>.</span></div>
+  <div class="nav-pills">
+    <button class="npill active" onclick="nav('dashboard',this)">🏠 Home</button>
+    <button class="npill" onclick="nav('kalori',this)">🔥 Kalori</button>
+    <button class="npill" onclick="nav('puasa',this)">⏱ Puasa</button>
+    <button class="npill" onclick="nav('ancaman',this)">🛡 Risiko</button>
+    <button class="npill" onclick="nav('dapur',this)">🍳 Dapur</button>
+    <button class="npill" onclick="nav('quotes',this)">✨ Quotes</button>
+    <button class="npill" onclick="nav('tips',this)">💡 Tips</button>
+  </div>
+  <div class="streak-tag">🔥 <span id="streakNum">1</span>h</div>
+</nav>
+<main>
+
+<!-- ════ DASHBOARD ════ -->
+<div class="sec on" id="sec-dashboard">
+  <div class="pg-eyebrow">Overview</div>
+  <div class="pg-h">Halo, <em id="dashName">Pejuang</em>! 👋</div>
+  <div class="stat-grid">
+    <div class="stat-box sb-blue">
+      <div class="sb-lbl">Berat</div>
+      <div class="sb-val" id="dW">75 <small>kg</small></div>
+      <div class="sb-delta d-pos">On track ↓</div>
+    </div>
+    <div class="stat-box sb-teal">
+      <div class="sb-lbl">BMI</div>
+      <div class="sb-val" id="dBMI">27.5</div>
+      <div class="sb-sub" id="dBMISub">Overweight</div>
+    </div>
+    <div class="stat-box sb-green">
+      <div class="sb-lbl">Target</div>
+      <div class="sb-val" id="dT">65 <small>kg</small></div>
+      <div class="sb-sub" id="dRemain">−10 kg</div>
+    </div>
+  </div>
+  <!-- RING + BARS -->
+  <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:center;">
+    <div class="ring-wrap">
+      <svg class="ring-svg" width="96" height="96" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="rg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0d9488"/><stop offset="100%" stop-color="#2dd4bf"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="50" cy="50" r="40"/>
+        <circle class="ring-fill" id="mainRing" cx="50" cy="50" r="40" stroke="url(#rg1)" stroke-dasharray="0 251.2"/>
+        <text x="50" y="52" text-anchor="middle" transform="rotate(90 50 50)">
+          <tspan class="ring-txt" x="50" dy="-8" id="rKcal">850</tspan>
+          <tspan class="ring-sub" x="50" dy="13">dari <tspan id="rMax">1600</tspan></tspan>
+        </text>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.6rem;">Kalori Hari Ini</div>
+      <div class="cal-bar-row"><div class="cal-bar-top"><span>Karbo</span><b id="bCarbo">340 kkal</b></div><div class="cal-bar-bg"><div class="cal-bar-fill fb" id="barCarbo" style="width:40%"></div></div></div>
+      <div class="cal-bar-row"><div class="cal-bar-top"><span>Protein</span><b id="bProt">280 kkal</b></div><div class="cal-bar-bg"><div class="cal-bar-fill fp" id="barProt" style="width:30%"></div></div></div>
+      <div class="cal-bar-row"><div class="cal-bar-top"><span>Lemak</span><b id="bFat">230 kkal</b></div><div class="cal-bar-bg"><div class="cal-bar-fill ff" id="barFat" style="width:25%"></div></div></div>
+    </div>
+  </div>
+  <!-- AI DAILY TIP -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">🤖</div> AI Coach Pagi Ini</div>
+      <span class="tag tb">AI</span>
+    </div>
+    <div class="daily-tip-box" id="aiDailyMsg">Memuat saran harianmu...</div>
+    <button class="q-refresh-btn" style="margin-top:.7rem;border:1.5px solid rgba(37,99,235,.25);color:var(--blue);background:rgba(37,99,235,.06);" onclick="refreshTip()" id="refreshTipBtn"><span>↻</span> Refresh</button>
+  </div>
+  <!-- ACTIONS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><div class="card-icon" style="background:rgba(245,158,11,.1);">⚡</div> Aksi Prioritas</div>
+      <span class="tag to" id="doneTag">0/5 selesai</span>
+    </div>
+    <div class="act-stack" id="actList">
+      <div class="act-item" onclick="chkAct(this)"><div class="act-ico" style="background:rgba(59,130,246,.1);">💧</div><div class="act-body"><div class="act-title">Minum 2L air putih hari ini</div><div class="act-desc">Hidrasi optimal → metabolisme naik 25% + kenyang lebih lama</div></div><div class="act-chk"></div></div>
+      <div class="act-item" onclick="chkAct(this)"><div class="act-ico" style="background:rgba(16,185,129,.1);">🥗</div><div class="act-body"><div class="act-title">½ piring sayur di setiap makan</div><div class="act-desc">Serat tinggi, rendah kalori — bikin kenyang dan sehat</div></div><div class="act-chk"></div></div>
+      <div class="act-item" onclick="chkAct(this)"><div class="act-ico" style="background:rgba(13,148,136,.1);">🚶</div><div class="act-body"><div class="act-title">Jalan kaki 10 menit setelah makan</div><div class="act-desc">Stabilkan gula darah & cegah penumpukan lemak perut</div></div><div class="act-chk"></div></div>
+      <div class="act-item" onclick="chkAct(this)"><div class="act-ico" style="background:rgba(245,158,11,.1);">🍽️</div><div class="act-body"><div class="act-title">Stop makan 3 jam sebelum tidur</div><div class="act-desc">Tubuh bakar lemak optimal saat tidur tanpa beban pencernaan</div></div><div class="act-chk"></div></div>
+      <div class="act-item" onclick="chkAct(this)"><div class="act-ico" style="background:rgba(239,68,68,.1);">📏</div><div class="act-body"><div class="act-title">Timbang badan pagi (sebelum makan)</div><div class="act-desc">Data akurat: setelah buang air, sebelum sarapan</div></div><div class="act-chk"></div></div>
+    </div>
+  </div>
+  <!-- CHART -->
+  <div class="card">
+    <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">📊</div> Tren Berat Badan</div><span class="tag tb">4 Minggu</span></div>
+    <div class="chart-wrap">
+      <svg class="mini-svg" viewBox="0 0 300 100" preserveAspectRatio="none">
+        <defs><linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".25"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></linearGradient></defs>
+        <path class="c-area" id="cArea"/><polyline class="c-line" id="cLine"/><circle class="c-dot" id="cDot" r="4"/>
+      </svg>
+    </div>
+    <div class="chart-labels" id="cLabels"></div>
+  </div>
+  <!-- TIMELINE -->
+  <div class="card">
+    <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(16,185,129,.1);">🗺️</div> Roadmap Target</div><span class="tag tg" id="tlBadge">~10 minggu</span></div>
+    <div class="timeline" id="tlWrap"></div>
+  </div>
+</div>
+
+<!-- ════ KALORI ════ -->
+<div class="sec" id="sec-kalori">
+  <div class="pg-eyebrow">Kontrol Kalori</div>
+  <div class="pg-h">Pantau <em>asupan</em> harianmu</div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(16,185,129,.07),rgba(13,148,136,.04));border-color:rgba(16,185,129,.25);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.8rem;">
+      <div><div class="sb-lbl">Sisa Kalori</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:2.8rem;font-weight:900;color:var(--teal);line-height:1.1;" id="calRemain">750</div>
+        <div style="font-size:.7rem;color:var(--text3);">dari <b id="calBudget" style="color:var(--text);">1600</b> kkal budget</div>
+      </div>
+      <div style="text-align:right;"><span class="tag tg" id="defBadge">−350 kkal</span><div style="font-size:.68rem;color:var(--text3);margin-top:.4rem;">≈ 0.5 kg/minggu</div></div>
+    </div>
+    <div class="cal-bar-bg" style="height:10px;margin-bottom:.3rem;"><div class="cal-bar-fill fb" id="mainCalBar" style="width:50%;"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.63rem;color:var(--text3);"><span>0</span><span style="color:var(--teal);font-weight:700;">⚡ Batas Aman</span><span id="calBudgetR">1600</span></div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(16,185,129,.1);">🛒</div> Makanan Diet Terbaik</div><span class="tag tg">Low Cal</span></div>
+    <div style="font-size:.7rem;color:var(--text3);margin-bottom:.65rem;">Tap untuk tambah ke log</div>
+    <div class="food-grid" id="foodGrid"></div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(239,68,68,.1);">🚫</div> Jebakan Kalori</div><span class="tag tr">Hindari</span></div><div id="avoidList"></div></div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(245,158,11,.1);">📝</div> Log Makan Hari Ini</div>
+    <button onclick="clearLog()" style="background:var(--surface2);border:1.5px solid var(--border);color:var(--text3);border-radius:8px;padding:.28rem .65rem;font-size:.68rem;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Reset</button></div>
+    <div id="foodLog" style="display:flex;flex-direction:column;gap:.4rem;min-height:40px;"><div style="text-align:center;color:var(--text3);font-size:.76rem;padding:.7rem;">Belum ada makanan dicatat</div></div>
+    <div style="border-top:1px solid var(--border);margin-top:.7rem;padding-top:.6rem;display:flex;justify-content:space-between;">
+      <span style="font-size:.76rem;color:var(--text3);">Total hari ini</span>
+      <span style="font-family:'Nunito',sans-serif;font-weight:900;color:var(--text);" id="logTotal">850 kkal</span>
+    </div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(59,130,246,.1);">📐</div> Target Makro</div></div>
+    <div class="macro-row">
+      <svg width="88" height="88" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--bg2)" stroke-width="20"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#0d9488" stroke-width="20" stroke-dasharray="107 232" stroke-dashoffset="-58" transform="rotate(-90 50 50)"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#2563eb" stroke-width="20" stroke-dasharray="88 251" stroke-dashoffset="-165" transform="rotate(-90 50 50)"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="20" stroke-dasharray="44 295" stroke-dashoffset="-253" transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="macro-legend">
+        <div class="ml-item"><div class="ml-dot" style="background:#0d9488;"></div><div class="ml-name">Karbohidrat</div><div class="ml-val" id="macK">200g</div><span style="font-size:.65rem;color:var(--text3);margin-left:.3rem;">45%</span></div>
+        <div class="ml-item"><div class="ml-dot" style="background:#2563eb;"></div><div class="ml-name">Protein</div><div class="ml-val" id="macP">120g</div><span style="font-size:.65rem;color:var(--text3);margin-left:.3rem;">35%</span></div>
+        <div class="ml-item"><div class="ml-dot" style="background:#f59e0b;"></div><div class="ml-name">Lemak Sehat</div><div class="ml-val" id="macL">44g</div><span style="font-size:.65rem;color:var(--text3);margin-left:.3rem;">20%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PUASA ════ -->
+<div class="sec" id="sec-puasa">
+  <div class="pg-eyebrow">Menu Puasa</div>
+  <div class="pg-h">Puasa <em>cerdas</em> & efektif</div>
+  <div class="fast-hero">
+    <div class="fast-status-tag" id="fastSTag">PILIH METODE & MULAI</div>
+    <div class="fast-clock" id="fastClock">00:00:00</div>
+    <div class="fast-phase-lbl">Fase: <b id="fastPhaseLbl">Siap memulai</b></div>
+    <div class="fast-prog-bar"><div class="fast-prog-fill" id="fastPFill" style="width:0%"></div></div>
+    <div class="fast-pct" id="fastPct">0% selesai</div>
+    <div style="display:flex;gap:.6rem;max-width:260px;margin:1rem auto 0;">
+      <button id="fastBtn" onclick="toggleFast()" style="flex:1;padding:.8rem;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.35);color:white;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;">▶ Mulai</button>
+      <button onclick="resetFast()" style="flex:1;padding:.8rem;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);color:white;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;">↺ Reset</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">📋</div> Pilih Metode</div></div><div class="ft-list" id="ftMethods"></div></div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(16,185,129,.1);">🧬</div> Apa yang Terjadi di Tubuh</div></div><div id="ftFases"></div></div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(59,130,246,.1);">💡</div> Tips Sukses Puasa</div></div>
+    <div class="act-stack">
+      <div class="act-item" style="cursor:default;"><div class="act-ico" style="background:rgba(59,130,246,.1);">💧</div><div class="act-body"><div class="act-title">Minum banyak air selama puasa</div><div class="act-desc">Minimal 2–3L — menghilangkan rasa lapar palsu yang sebenarnya haus</div></div></div>
+      <div class="act-item" style="cursor:default;"><div class="act-ico" style="background:rgba(245,158,11,.1);">🧂</div><div class="act-body"><div class="act-title">Tambah elektrolit (bukan gula)</div><div class="act-desc">Sodium, kalium, magnesium — cegah pusing & kram otot</div></div></div>
+      <div class="act-item" style="cursor:default;"><div class="act-ico" style="background:rgba(16,185,129,.1);">🍳</div><div class="act-body"><div class="act-title">Buka puasa dengan protein dulu</div><div class="act-desc">Telur atau ayam — stabilkan gula darah, cegah overeating</div></div></div>
+      <div class="act-item" style="cursor:default;"><div class="act-ico" style="background:rgba(239,68,68,.1);">🚫</div><div class="act-body"><div class="act-title">Hindari kalori cair selama puasa</div><div class="act-desc">Kopi hitam & teh tanpa gula OK, tapi hindari semua kalori lainnya</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ANCAMAN ════ -->
+<div class="sec" id="sec-ancaman">
+  <div class="pg-eyebrow">Analisa Risiko</div>
+  <div class="pg-h">Pantau <em>ancaman</em> kesehatanmu</div>
+  <div class="notif-pill">🚨 <span id="alertNum">3</span> hal perlu perhatianmu</div>
+  <div class="card">
+    <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">📊</div> Posisi BMI</div><span class="tag" id="bmiTagBadge">Overweight</span></div>
+    <div class="bmi-wrap"><div class="bmi-pin" id="bmiPin" style="left:60%"></div></div>
+    <div class="bmi-axis"><span>Kurus<br>&lt;18.5</span><span>Normal<br>18.5–25</span><span>Overweight<br>25–30</span><span>Obese<br>≥30</span></div>
+    <div id="bmiAdvice" style="margin-top:.85rem;padding:.75rem;background:var(--surface2);border-radius:9px;font-size:.76rem;color:var(--text2);line-height:1.7;border-left:2.5px solid var(--blue3);"></div>
+  </div>
+  <div id="alertWrap"></div>
+  <div class="ins-grid" id="insGrid"></div>
+  <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(239,68,68,.1);">🩺</div> Risiko Berdasarkan BMI</div></div><div id="riskRows"></div></div>
+</div>
+
+<!-- ════ DAPUR ════ -->
+<div class="sec" id="sec-dapur">
+  <div class="pg-eyebrow">Dapur Cerdas</div>
+  <div class="pg-h">Masak <em>sehat</em>, tahu gizinya</div>
+  <div class="mode-tabs">
+    <button class="mode-tab on" onclick="swDapur('analyze',this)">🔬 Analisa</button>
+    <button class="mode-tab" onclick="swDapur('recipe',this)">📖 Resep</button>
+    <button class="mode-tab" onclick="swDapur('suggest',this)">✨ Saran AI</button>
+  </div>
+  <!-- ANALISA -->
+  <div id="dAnalyze">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(16,185,129,.1);">🧪</div> Input Bahan Masakan</div><span class="tag tg">AI Analisa</span></div>
+      <div style="font-size:.73rem;color:var(--text3);margin-bottom:.75rem;line-height:1.6;">Ketik bahan yang kamu punya — AI kalkulasi kalori, gizi, dan saran diet secara cerdas.</div>
+      <div class="ing-search-wrap">
+        <div class="ing-search-icon">🔍</div>
+        <input class="ing-search" id="ingInp" type="text" placeholder="Ketik bahan: nasi, ayam, brokoli, telur..." oninput="ingAC(this.value)" onkeydown="ingKey(event)">
+        <div class="ing-ac" id="ingDD"></div>
+      </div>
+      <div class="portion-row" id="portRow" style="display:none;">
+        <span class="portion-lbl">Porsi:</span>
+        <input class="portion-inp" id="portGram" type="number" value="100" min="1" max="2000">
+        <span class="portion-lbl">gram</span>
+        <div class="s-btns">
+          <button class="sbtn" onclick="setGram(50)">50g</button>
+          <button class="sbtn" onclick="setGram(100)">100g</button>
+          <button class="sbtn" onclick="setGram(150)">150g</button>
+          <button class="sbtn" onclick="setGram(200)">200g</button>
+          <button class="sbtn" style="background:var(--teal);border-color:var(--teal);color:white;" onclick="addIngFS()">✓ Tambah</button>
+        </div>
+      </div>
+      <div class="ing-tags-area empty" id="ingTags"></div>
+      <div style="display:flex;gap:.6rem;margin-bottom:.75rem;">
+        <div style="flex:1;"><div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem;">Nama Masakan</div>
+          <input class="ing-search" id="dishNm" type="text" placeholder="Nama masakan (opsional)..." style="padding:.6rem .85rem;font-size:.78rem;"></div>
+        <div style="width:75px;"><div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem;">Porsi</div>
+          <input class="portion-inp" id="servCnt" type="number" value="1" min="1" max="20" style="width:100%;"></div>
+      </div>
+      <div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem;">Bahan populer:</div>
+      <div class="quick-chips" id="qIngChips"></div>
+      <button class="analyze-btn" id="aBtn" onclick="doAnalyze()"><span>🔬</span> Analisa Kalori & Gizi</button>
+    </div>
+    <div id="nutResult" style="display:none;">
+      <div class="result-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
+          <div><div class="res-dish-name" id="rDishNm">Masakan Sehat</div><div class="res-desc" id="rDesc">Analisa gizi dari bahan-bahanmu</div></div>
+          <div style="font-size:2rem;" id="rEmoji">🍽️</div>
+        </div>
+        <div class="kcal-hero">
+          <div class="kcal-big" id="rKcal">0</div>
+          <div class="kcal-unit">kkal<br>/sajian</div>
+          <div class="kcal-pct-box"><div class="kcal-pct" id="rKPct">0%</div><div class="kcal-pct-lbl">budget<br>harian</div></div>
+        </div>
+        <div class="cal-bar-bg" style="height:8px;margin-bottom:.9rem;"><div class="cal-bar-fill fb" id="rKBar" style="width:0%;transition:width 1s ease;"></div></div>
+        <div class="nutri-grid">
+          <div class="nutri-box"><div class="nutri-val" style="color:#0d9488;" id="rCarb">0g</div><div class="nutri-lbl">Karbo</div><div class="nutri-bar-m"><div class="nutri-bar-mf" id="rCarbBar" style="background:#0d9488;width:0%;transition:width 1s .2s ease;"></div></div></div>
+          <div class="nutri-box"><div class="nutri-val" style="color:var(--blue);" id="rProt">0g</div><div class="nutri-lbl">Protein</div><div class="nutri-bar-m"><div class="nutri-bar-mf" id="rProtBar" style="background:var(--blue);width:0%;transition:width 1s .3s ease;"></div></div></div>
+          <div class="nutri-box"><div class="nutri-val" style="color:var(--amber);" id="rFat">0g</div><div class="nutri-lbl">Lemak</div><div class="nutri-bar-m"><div class="nutri-bar-mf" id="rFatBar" style="background:var(--amber);width:0%;transition:width 1s .4s ease;"></div></div></div>
+          <div class="nutri-box"><div class="nutri-val" style="color:var(--purple);" id="rFiber">0g</div><div class="nutri-lbl">Serat</div><div class="nutri-bar-m"><div class="nutri-bar-mf" id="rFiberBar" style="background:var(--purple);width:0%;transition:width 1s .5s ease;"></div></div></div>
+        </div>
+        <div style="font-size:.63rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.45rem;">Vitamin & Mineral</div>
+        <div class="vit-grid" id="rVits"></div>
+        <div class="diet-score-row"><div class="score-circle" id="rScoreCircle">A</div><div class="score-txt" id="rScoreTxt">Menganalisa...</div></div>
+      </div>
+      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">🤖</div> Saran AI Chef</div><span class="tag tb">AI</span></div>
+        <div class="ai-recipe-tip" id="rAITip">Menganalisa...</div>
+        <button class="q-refresh-btn" onclick="doAnalyze()" style="margin-top:.3rem;border:1.5px solid rgba(37,99,235,.25);color:var(--blue);background:rgba(37,99,235,.05);"><span>↻</span> Analisa Ulang</button>
+      </div>
+      <button class="analyze-btn" style="background:linear-gradient(135deg,var(--teal),var(--teal2));" onclick="addResLog()"><span>➕</span> Tambahkan ke Log Kalori</button>
+    </div>
+  </div>
+  <!-- RESEP -->
+  <div id="dRecipe" style="display:none;"><div id="recipeLib"></div></div>
+  <!-- SARAN AI -->
+  <div id="dSuggest" style="display:none;">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(245,158,11,.1);">✨</div> Saran Menu dari AI</div><span class="tag to">AI</span></div>
+      <div style="font-size:.76rem;color:var(--text3);margin-bottom:.8rem;line-height:1.6;">Ceritakan bahan yang ada atau kondisi dietmu, AI sarankan menu masakan beserta estimasi gizinya.</div>
+      <textarea id="sugInp" style="width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:11px;padding:.8rem 1rem;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none;resize:none;height:88px;transition:border-color .2s;line-height:1.6;" placeholder="Contoh: Saya punya telur, tahu, bayam. Diet rendah karbo. Sarankan menu makan siang..." onkeydown="if(event.ctrlKey&&event.key==='Enter')doSuggest()"></textarea>
+      <div class="sug-chips" id="sugChips"></div>
+      <button class="analyze-btn" id="sugBtn" style="background:linear-gradient(135deg,var(--amber),#f59e0b);" onclick="doSuggest()"><span>✨</span> Minta Saran AI</button>
+    </div>
+    <div id="sugResult" style="display:none;">
+      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(16,185,129,.1);">🍳</div> Saran Menu AI</div><span class="tag tg">Ready</span></div><div id="sugContent" style="font-size:.8rem;color:var(--text2);line-height:1.8;"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ QUOTES ════ -->
+<div class="sec" id="sec-quotes">
+  <div class="pg-eyebrow">Penyemangat & Pengingat</div>
+  <div class="pg-h">Kata-kata yang <em>menggerakkan</em></div>
+  <div class="qhero">
+    <div class="q-cat-tag" id="qHeroTag">✨ Quote Hari Ini</div>
+    <div class="q-text" id="qHeroText">"Setiap perjalanan seribu mil dimulai dengan satu langkah kecil."</div>
+    <div class="q-src" id="qHeroSrc">— <b>Lao Tzu</b> · Filsuf Tiongkok</div>
+    <div class="q-ctx" id="qHeroCtx">Dalam diet, kita sering tergoda melihat jauh ke depan dan merasa kewalahan. Fokuslah pada hari ini. Satu pilihan makanan sehat sudah cukup untuk hari ini.</div>
+    <button class="q-refresh-btn" id="qRefBtn" onclick="fetchQuoteAI()"><span>✨</span> Quote Baru (AI)</button>
+  </div>
+  <div class="qcats" id="qCatBtns"></div>
+  <div class="q-list" id="qList"></div>
+</div>
+
+<!-- ════ TIPS ════ -->
+<div class="sec" id="sec-tips">
+  <div class="pg-eyebrow">Panduan Ahli</div>
+  <div class="pg-h">Tips <em>ilmiah</em> terbukti efektif</div>
+  <div class="ai-chat-wrap">
+    <div class="ai-chat-head">
+      <div class="ai-av">🤖</div>
+      <div><div class="ai-nm">SlimIQ AI Coach</div><div class="ai-st">Powered by Gemini</div></div>
+      <span class="tag tb" style="margin-left:auto;">AI</span>
+    </div>
+    <div class="ai-msgs" id="aiMsgs">
+      <div class="ai-msg bot" id="aiWelcome">Halo! Saya AI Coach SlimIQ. Tanya apapun soal diet, kalori, olahraga, atau puasa — saya jawab berdasarkan profilmu! 💪</div>
+    </div>
+    <div class="ai-qbtns">
+      <button class="ai-qbtn" onclick="askAI('Apa menu sarapan terbaik untuk diet saya?')">🍳 Menu sarapan</button>
+      <button class="ai-qbtn" onclick="askAI('Apakah BMI saya berbahaya?')">📊 Cek BMI</button>
+      <button class="ai-qbtn" onclick="askAI('Rekomendasikan metode puasa terbaik untuk saya')">⏱ Saran puasa</button>
+      <button class="ai-qbtn" onclick="askAI('Berikan motivasi diet untuk hari ini')">💪 Motivasi</button>
+    </div>
+    <div class="ai-inp-row">
+      <input class="ai-inp" id="aiInp" placeholder="Tanya AI Coach..." onkeydown="if(event.key==='Enter')sendAI()">
+      <button class="ai-send" onclick="sendAI()">→</button>
+    </div>
+  </div>
+  <div class="tip-chips" id="tipChips"></div>
+  <div class="tip-list" id="tipList"></div>
+</div>
+
+</main>
+</div><!-- end app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<script>
+/* ══════════ STATE ══════════ */
+const S={
+  name:'',story:'',job:'desk',jobLabel:'Kantoran',jobIcon:'💻',
+  W:75,H:165,A:30,T:65,goal:'turun',conds:[],
+  kcal:850,foodLog:[],streak:1,
+  fastMethod:'16-8',fastRun:false,fastEl:0,fastSt:null,fastInt:null,
+  GEMINI_KEY:'', // Set by backend — leave empty for local fallback
+  tipCat:'Semua',qCat:'Semua'
+};
+
+/* ══════════ SETUP ══════════ */
+let curStp=1;
+function goStp(n){
+  if(n===2){
+    const nm=document.getElementById('inputName').value.trim();
+    if(!nm){toast('⚠️ Masukkan namamu dulu!');return;}
+    S.name=nm;
+    document.getElementById('bubble2').innerHTML=`Senang bertemu <b>${nm}</b>! 🎉<br><br>Ceritakan sedikit tentang <b>keseharian kamu</b> — apa yang kamu rasakan dan apa yang ingin kamu capai?`;
+    document.getElementById('aiWelcome').textContent=`Halo ${nm}! Saya AI Coach SlimIQ. Tanya apapun soal diet, kalori, olahraga, atau puasa — saya jawab berdasarkan profilmu! 💪`;
+  }
+  if(n===7) buildSummary();
+  document.getElementById('stp'+curStp).classList.remove('on');
+  curStp=n;
+  document.getElementById('stp'+n).classList.add('on');
+  const bars=document.querySelectorAll('#sProgress .s-bar');
+  bars.forEach((b,i)=>{b.classList.remove('active','done');if(i===n-1)b.classList.add('active');else if(i<n-1)b.classList.add('done');});
+}
+
+function pickJob(el,id,icon,label,sub){
+  document.querySelectorAll('#jobList .s-opt-row').forEach(r=>{r.classList.remove('sel');r.querySelector('.sr-check').textContent='';});
+  el.classList.add('sel');el.querySelector('.sr-check').textContent='✓';
+  S.job=id;S.jobIcon=icon;S.jobLabel=label;
+  // Auto-set activity level
+  const actMap={desk:'sedentary',driver:'sedentary',courier:'moderate',teacher:'light',homemaker:'light',labor:'very',student:'light',health:'moderate'};
+  S.act=actMap[id]||'light';
+}
+
+function pickOpt(el,key,val){
+  const g=el.closest('.s-opt-grid');g.querySelectorAll('.s-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');S[key]=val;
+}
+function togCond(el,val){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel'))S.conds.push(val);
+  else S.conds=S.conds.filter(c=>c!==val);
+}
+function slChg(rid,val,unit,key,inp){
+  document.getElementById(rid).innerHTML=`${val} <small>${unit}</small>`;
+  S[key]=parseInt(val);
+  const min=+inp.min,max=+inp.max;
+  inp.style.setProperty('--pct',((val-min)/(max-min)*100)+'%');
+}
+
+// Story char counter
+document.getElementById('inputStory').addEventListener('input',function(){
+  document.getElementById('storyCount').textContent=`${this.value.length} / 300`;
+  S.story=this.value;
+});
+
+function buildSummary(){
+  const b=calcBMI(),bs=bmiStatus(b),dc=dietCal(),wtt=weeksToTarget();
+  document.getElementById('scName').textContent=S.name||'Pengguna';
+  const goalLabels={turun:'📉 Turun Berat',jaga:'⚖️ Jaga Berat',stamina:'⚡ Lebih Bertenaga',sehat:'💚 Hidup Sehat'};
+  document.getElementById('scTags').innerHTML=`
+    <span class="sc-tag">${S.jobIcon} ${S.jobLabel}</span>
+    <span class="sc-tag">${goalLabels[S.goal]||'🎯 Diet'}</span>
+    <span class="sc-tag">BMI ${b} — ${bs.l}</span>
+  `;
+  const story=S.story||'Siap memulai perjalanan diet yang lebih sehat!';
+  document.getElementById('scStory').textContent=`"${story.slice(0,80)}${story.length>80?'...':''}"`;
+  document.getElementById('scBMI').textContent=b;
+  document.getElementById('scKcal').textContent=dc;
+  document.getElementById('scWeeks').textContent=wtt;
+  document.getElementById('bubble7').innerHTML=`Profil <b>${S.name}</b> sudah siap! 🎉 Saya sudah analisa kondisimu dan siap memberikan panduan personal yang tepat. Mari mulai! 🚀`;
+}
+
+function finishSetup(){
+  const k=localStorage.getItem('slimiq_gk');
+  if(k)S.GEMINI_KEY=k;
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').style.display='block';
+  initApp();
+  toast(`🎉 Selamat datang, ${S.name}!`);
+}
+
+/* ══════════ CALC ══════════ */
+const calcBMI=()=>+(S.W/Math.pow(S.H/100,2)).toFixed(1);
+function bmiStatus(b){
+  if(b<18.5)return{l:'Kurus',cls:'tb',col:'#3b82f6'};
+  if(b<25)return{l:'Normal',cls:'tg',col:'#10b981'};
+  if(b<30)return{l:'Overweight',cls:'to',col:'#d97706'};
+  return{l:'Obesitas',cls:'tr',col:'#dc2626'};
+}
+function calcTDEE(){
+  const bmr=10*S.W+6.25*S.H-5*S.A+5;
+  const m={sedentary:1.2,light:1.375,moderate:1.55,very:1.725}[S.act||'light']||1.375;
+  return Math.round(bmr*m);
+}
+const dietCal=()=>Math.round(calcTDEE()*0.8);
+const weeksToTarget=()=>Math.ceil(Math.abs(S.W-S.T)/0.5);
+
+/* ══════════ INIT APP ══════════ */
+function initApp(){
+  const b=calcBMI(),bs=bmiStatus(b),dc=dietCal(),td=calcTDEE(),wtt=weeksToTarget(),diff=S.W-S.T;
+  // DASHBOARD
+  document.getElementById('dashName').textContent=S.name||'Pejuang';
+  document.getElementById('dW').innerHTML=`${S.W} <small>kg</small>`;
+  document.getElementById('dBMI').textContent=b;
+  document.getElementById('dBMISub').textContent=bs.l;
+  document.getElementById('dT').innerHTML=`${S.T} <small>kg</small>`;
+  document.getElementById('dRemain').textContent=diff>0?`−${diff} kg lagi`:'Tercapai! 🎉';
+  document.getElementById('streakNum').textContent=S.streak;
+  setTimeout(()=>{
+    const pct=Math.min(S.kcal/dc,1);
+    document.getElementById('mainRing').setAttribute('stroke-dasharray',`${(pct*251.2).toFixed(1)} 251.2`);
+    document.getElementById('rKcal').textContent=S.kcal;document.getElementById('rMax').textContent=dc;
+    document.getElementById('barCarbo').style.width=Math.min(S.kcal*.4/dc*100,100)+'%';
+    document.getElementById('barProt').style.width=Math.min(S.kcal*.33/dc*100,100)+'%';
+    document.getElementById('barFat').style.width=Math.min(S.kcal*.27/dc*100,100)+'%';
+  },500);
+  document.getElementById('bCarbo').textContent=Math.round(S.kcal*.40)+' kkal';
+  document.getElementById('bProt').textContent=Math.round(S.kcal*.33)+' kkal';
+  document.getElementById('bFat').textContent=Math.round(S.kcal*.27)+' kkal';
+  // KALORI
+  document.getElementById('calRemain').textContent=Math.max(0,dc-S.kcal);
+  document.getElementById('calBudget').textContent=dc;document.getElementById('calBudgetR').textContent=dc;
+  document.getElementById('defBadge').textContent=`−${td-dc} kkal`;
+  const cp=Math.min((S.kcal/dc)*100,100);
+  document.getElementById('mainCalBar').style.width=cp+'%';
+  document.getElementById('mainCalBar').className='cal-bar-fill '+(cp>85?'fr':cp>65?'fp':'fb');
+  document.getElementById('logTotal').textContent=S.kcal+' kkal';
+  document.getElementById('macK').textContent=Math.round(dc*.45/4)+'g';
+  document.getElementById('macP').textContent=Math.round(dc*.35/4)+'g';
+  document.getElementById('macL').textContent=Math.round(dc*.20/9)+'g';
+  renderChart();renderTimeline(wtt,diff);renderFoodItems();renderFasting();renderAncaman(b,bs);
+  renderQuotes();renderTips();renderDapur();renderDailyTip();updateFoodLog();
+}
+
+/* ══════════ CHART ══════════ */
+function renderChart(){
+  const w=S.W,pts=[w+2.2,w+1.5,w+0.9,w+0.3,w,w-0.4,w-0.9,w-1.5,w-2.0];
+  const mn=Math.min(...pts)-1,mx=Math.max(...pts)+1;
+  const p=pts.map((v,i)=>({x:(i/(pts.length-1))*298+1,y:95-((v-mn)/(mx-mn))*88}));
+  document.getElementById('cLine').setAttribute('points',p.map(n=>`${n.x},${n.y}`).join(' '));
+  document.getElementById('cArea').setAttribute('d',`M${p[0].x},100 `+p.map(n=>`L${n.x},${n.y}`).join(' ')+` L${p[p.length-1].x},100 Z`);
+  const l=p[p.length-1];
+  document.getElementById('cDot').setAttribute('cx',l.x);document.getElementById('cDot').setAttribute('cy',l.y);
+  document.getElementById('cLabels').innerHTML=['4mgg lalu','3mgg lalu','2mgg lalu','1mgg lalu','Kini'].map(l=>`<span>${l}</span>`).join('');
+}
+
+/* ══════════ TIMELINE ══════════ */
+function renderTimeline(weeks,diff){
+  document.getElementById('tlBadge').textContent=`~${weeks} minggu`;
+  const notes=['Mulai terasa lebih ringan!','Perubahan fisik terlihat!','Hampir sampai!','🏆 TARGET TERCAPAI!'];
+  let html='';
+  for(let i=1;i<=4;i++){const kg=Math.round(S.W-(diff/4)*i),wk=Math.round(weeks*i/4),done=i===1;
+    html+=`<div class="tl-item"><div class="tl-dot ${done?'':'future'}"></div><div class="tl-week">Minggu ${wk}</div><div class="tl-event" style="color:${done?'var(--teal)':'var(--text)'}">${done?'✅':'🎯'} Target ${kg} kg</div><div class="tl-note">${done?'Sedang berjalan...':notes[i-1]}</div></div>`;}
+  document.getElementById('tlWrap').innerHTML=html;
+}
+
+/* ══════════ FOOD ══════════ */
+const FOODS=[
+  {e:'🥚',n:'Telur Rebus',c:78},{e:'🐔',n:'Dada Ayam',c:165},{e:'🥦',n:'Brokoli',c:34},
+  {e:'🥗',n:'Salad Sayur',c:45},{e:'🍌',n:'Pisang',c:89},{e:'🍎',n:'Apel',c:72},
+  {e:'🐟',n:'Ikan Salmon',c:175},{e:'🧆',n:'Tempe 100g',c:160},{e:'🍠',n:'Ubi Kukus',c:103},
+  {e:'🌾',n:'Oatmeal',c:150},{e:'🥛',n:'Greek Yogurt',c:100},{e:'🥑',n:'Alpukat ½',c:120},
+];
+const AVOID=[
+  {e:'🧁',n:'Gorengan',c:'250–400 kkal/biji',r:'Lemak trans tinggi, picu peradangan kronis'},
+  {e:'🥤',n:'Boba/Minuman Manis',c:'400–600 kkal',r:'Gula spike → insulin naik → lemak langsung disimpan'},
+  {e:'🍜',n:'Mie Instan',c:'380–500 kkal',r:'Sodium ultra-tinggi, retensi air, nilai gizi hampir nol'},
+  {e:'🍞',n:'Roti Putih & Kue',c:'150–300 kkal/sajian',r:'GI sangat tinggi, cepat lapar lagi, insulin spike'},
+];
+function renderFoodItems(){
+  document.getElementById('foodGrid').innerHTML=FOODS.map(f=>`<div class="food-tile" onclick="addFood('${f.n}',${f.c},'${f.e}')"><div class="fe">${f.e}</div><div><div class="fn">${f.n}</div><div class="fc"><b>${f.c}</b> kkal</div></div><button class="fadd" onclick="event.stopPropagation();addFood('${f.n}',${f.c},'${f.e}')">+</button></div>`).join('');
+  document.getElementById('avoidList').innerHTML=AVOID.map(f=>`<div class="avoid-item"><div class="avoid-ico">${f.e}</div><div><div class="avoid-name">${f.n}</div><div class="avoid-cal">${f.c}</div><div class="avoid-reason">${f.r}</div></div></div>`).join('');
+}
+function addFood(name,cal,emoji){S.kcal+=cal;S.foodLog.push({name,cal,emoji});updateFoodLog();toast(`${emoji} +${cal} kkal ditambahkan`);}
+function removeFood(i){S.kcal-=S.foodLog[i].cal;S.foodLog.splice(i,1);updateFoodLog();}
+function clearLog(){S.foodLog=[];S.kcal=0;updateFoodLog();}
+function updateFoodLog(){
+  const dc=dietCal();
+  document.getElementById('foodLog').innerHTML=S.foodLog.length?S.foodLog.map((f,i)=>`<div class="log-item"><span>${f.emoji}</span><span class="lname">${f.name}</span><span class="lcal">${f.cal} kkal</span><span class="ldel" onclick="removeFood(${i})">✕</span></div>`).join(''):'<div style="text-align:center;color:var(--text3);font-size:.75rem;padding:.7rem;">Belum ada makanan dicatat</div>';
+  document.getElementById('logTotal').textContent=S.kcal+' kkal';
+  document.getElementById('calRemain').textContent=Math.max(0,dc-S.kcal);
+  const cp=Math.min((S.kcal/dc)*100,100);
+  document.getElementById('mainCalBar').style.width=cp+'%';
+  document.getElementById('mainCalBar').className='cal-bar-fill '+(cp>85?'fr':cp>65?'fp':'fb');
+  document.getElementById('mainRing').setAttribute('stroke-dasharray',`${Math.min(S.kcal/dc*251.2,251.2).toFixed(1)} 251.2`);
+  document.getElementById('rKcal').textContent=S.kcal;
+}
+
+/* ══════════ FASTING ══════════ */
+const FMETHODS=[
+  {id:'16-8',ico:'⏰',n:'16:8 — Leangains',d:'Puasa 16 jam, makan 8 jam. Paling populer & mudah pemula.',h:16},
+  {id:'18-6',ico:'🌙',n:'18:6 — Intensif',d:'Puasa 18 jam, window makan 6 jam. Pembakaran lemak lebih optimal.',h:18},
+  {id:'20-4',ico:'🦁',n:'20:4 — Warrior',d:'Puasa 20 jam, satu makan besar malam. Untuk yang berpengalaman.',h:20},
+  {id:'5-2',ico:'📅',n:'5:2 — Fleksibel',d:'5 hari normal, 2 hari 500–600 kkal. Cocok gaya hidup sibuk.',h:null},
+  {id:'omad',ico:'🍽️',n:'OMAD — One Meal',d:'23 jam puasa, satu sesi makan. Level ekspert.',h:23},
+];
+const FFASES=[
+  {h:'0–4 jam',ico:'😴',t:'Fase Kenyang',d:'Tubuh mencerna makanan, insulin naik, energi dari glukosa.'},
+  {h:'4–8 jam',ico:'🔄',t:'Transisi Energi',d:'Glukosa habis, tubuh beralih ke glikogen hati.'},
+  {h:'8–16 jam',ico:'🔥',t:'Fat Burning Aktif',d:'Lipolisis aktif — tubuh membakar lemak tersimpan.'},
+  {h:'16–24 jam',ico:'⚡',t:'Ketosis Ringan',d:'Keton diproduksi, fokus meningkat, lemak terbakar intensif.'},
+  {h:'24+ jam',ico:'🧬',t:'Autophagy',d:'Sel membersihkan diri — efek anti-aging & detox alami.'},
+];
+function renderFasting(){
+  document.getElementById('ftMethods').innerHTML=FMETHODS.map(m=>`<div class="ft ${m.id===S.fastMethod?'sel':''}" onclick="pickFast('${m.id}')"><div class="ft-ico">${m.ico}</div><div><div class="ft-name">${m.n}</div><div class="ft-desc">${m.d}</div></div><div class="ft-hrs">${m.h?m.h+'h':'5:2'}</div></div>`).join('');
+  document.getElementById('ftFases').innerHTML=FFASES.map(f=>`<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.65rem;background:var(--surface2);border-radius:10px;margin-bottom:.45rem;"><div style="width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;">${f.ico}</div><div><div style="font-size:.65rem;color:var(--text3);font-weight:600;">${f.h}</div><div style="font-size:.8rem;font-weight:700;color:var(--text);margin:.08rem 0;">${f.t}</div><div style="font-size:.7rem;color:var(--text2);line-height:1.5;">${f.d}</div></div></div>`).join('');
+}
+function pickFast(id){S.fastMethod=id;document.querySelectorAll('.ft').forEach((el,i)=>el.classList.toggle('sel',FMETHODS[i].id===id));toast('Metode: '+FMETHODS.find(m=>m.id===id).n);}
+let fastRun=false,fastEl=0,fastSt=null,fastInt=null;
+function toggleFast(){
+  if(!fastRun){fastRun=true;fastSt=Date.now()-fastEl;document.getElementById('fastBtn').textContent='⏸ Pause';document.getElementById('fastSTag').textContent='🔥 SEDANG BERPUASA';fastInt=setInterval(tickFast,1000);toast('Puasa dimulai! Bismillah 💪');}
+  else{fastRun=false;fastEl=Date.now()-fastSt;clearInterval(fastInt);document.getElementById('fastBtn').textContent='▶ Lanjutkan';document.getElementById('fastSTag').textContent='⏸ DIJEDA';}
+}
+function resetFast(){fastRun=false;fastEl=0;fastSt=null;clearInterval(fastInt);document.getElementById('fastBtn').textContent='▶ Mulai';document.getElementById('fastSTag').textContent='PILIH METODE & MULAI';document.getElementById('fastClock').textContent='00:00:00';document.getElementById('fastPhaseLbl').textContent='Siap memulai';document.getElementById('fastPFill').style.width='0%';document.getElementById('fastPct').textContent='0% selesai';}
+function tickFast(){
+  const el=Date.now()-fastSt,h=Math.floor(el/3600000),m=Math.floor((el%3600000)/60000),s=Math.floor((el%60000)/1000);
+  document.getElementById('fastClock').textContent=[h,m,s].map(n=>n.toString().padStart(2,'0')).join(':');
+  const mt=FMETHODS.find(x=>x.id===S.fastMethod);
+  if(mt&&mt.h){const tgt=mt.h*3600000,pct=Math.min((el/tgt)*100,100);document.getElementById('fastPFill').style.width=pct+'%';document.getElementById('fastPct').textContent=pct.toFixed(1)+'% selesai';
+    const hh=el/3600000;let ph='Fase Kenyang';if(hh>=24)ph='🧬 Autophagy!';else if(hh>=16)ph='⚡ Ketosis!';else if(hh>=8)ph='🔥 Bakar Lemak!';else if(hh>=4)ph='🔄 Transisi';document.getElementById('fastPhaseLbl').textContent=ph;
+    if(pct>=100){toast('🎉 Puasa selesai! Luar biasa!');toggleFast();}}
+}
+
+/* ══════════ ANCAMAN ══════════ */
+function renderAncaman(b,bs){
+  const pct=Math.min(Math.max((b-10)/30*100,3),95);
+  document.getElementById('bmiPin').style.left=pct+'%';
+  document.getElementById('bmiTagBadge').className='tag '+bs.cls;
+  document.getElementById('bmiTagBadge').textContent=bs.l;
+  document.getElementById('bmiAdvice').textContent=b<25?'✅ BMI ideal! Fokus pertahankan komposisi tubuh dan tingkatkan kebugaran.':b<30?`BMI ${b} — Overweight. Turun 5kg sudah mengurangi risiko penyakit jantung secara signifikan.`:`BMI ${b} — Obesitas. Konsultasi dokter sangat disarankan. Penurunan 10% berat saat ini memberikan perbaikan kesehatan nyata.`;
+  const al=[];
+  if(b>=25)al.push({t:'al-d',ico:'⚠️',ttl:'BMI Di Atas Normal',desc:`BMI ${b} meningkatkan risiko kardiovaskular, diabetes tipe 2, dan hipertensi.`});
+  if(S.conds.includes('diabetes'))al.push({t:'al-w',ico:'🩸',ttl:'Perhatian: Gula Darah',desc:'Hindari makanan GI tinggi. Pilih karbo kompleks, makan porsi kecil sering.'});
+  if(S.conds.includes('hipertensi'))al.push({t:'al-w',ico:'💊',ttl:'Pantau Tekanan Darah',desc:'Kurangi sodium <1500mg/hari. Perbanyak kalium (pisang, kentang, sayuran hijau).'});
+  if(S.conds.includes('maag'))al.push({t:'al-w',ico:'😮‍💨',ttl:'Puasa + Maag: Hati-hati',desc:'Konsultasikan dengan dokter sebelum memulai puasa intermittent.'});
+  al.push({t:'al-s',ico:'💡',ttl:'Insight Minggu Ini',desc:'Protein di pagi hari mengurangi keinginan makan siang hingga 60%. Tambahkan telur di sarapan!'});
+  document.getElementById('alertNum').textContent=al.filter(a=>a.t!=='al-s').length;
+  document.getElementById('alertWrap').innerHTML=al.map(a=>`<div class="alert ${a.t}"><div class="al-ico">${a.ico}</div><div><div class="al-title">${a.ttl}</div><div class="al-desc">${a.desc}</div></div></div>`).join('');
+  const td=calcTDEE(),dc=dietCal(),wtt=weeksToTarget();
+  const ins=[{e:'📊',l:'BMI Score',v:`${b} — ${bs.l}`},{e:'⚡',l:'TDEE Harian',v:`${td} kkal`},{e:'🎯',l:'Target Diet',v:`${dc} kkal`},{e:'📅',l:'Estimasi',v:`${wtt} minggu`},{e:'🔥',l:'Deficit',v:`${td-dc} kkal`},{e:'⚖️',l:'Target Turun',v:`${Math.abs(S.W-S.T)} kg`}];
+  document.getElementById('insGrid').innerHTML=ins.map(i=>`<div class="ins-box"><div class="ins-e">${i.e}</div><div class="ins-l">${i.l}</div><div class="ins-v">${i.v}</div></div>`).join('');
+  const risks=b<25?[{c:'var(--green)',r:'Risiko kardiovaskular: Rendah'},{c:'var(--green)',r:'Risiko diabetes: Rendah'},{c:'var(--green)',r:'Kondisi berat badan: Ideal'}]:b<30?[{c:'#d97706',r:'Risiko kardiovaskular: Sedang (+28%)'},{c:'#d97706',r:'Risiko diabetes tipe 2: Sedang (+50%)'},{c:'#dc2626',r:'Kolesterol abnormal lebih mungkin'},{c:'#d97706',r:'Risiko hipertensi: Sedang (+38%)'}]:[{c:'#dc2626',r:'Risiko kardiovaskular: Tinggi (+81%)'},{c:'#dc2626',r:'Risiko diabetes tipe 2: Sangat Tinggi (+700%)'},{c:'#dc2626',r:'Risiko hipertensi: Tinggi (+65%)'},{c:'#d97706',r:'Risiko sleep apnea meningkat'},{c:'#d97706',r:'Masalah sendi & mobilitas'}];
+  document.getElementById('riskRows').innerHTML=risks.map(r=>`<div class="risk-row"><div class="risk-dot" style="background:${r.c};box-shadow:0 0 5px ${r.c}40;"></div>${r.r}</div>`).join('');
+}
+
+/* ══════════ GEMINI API ══════════ */
+async function callGemini(prompt){
+  const key=S.GEMINI_KEY||localStorage.getItem('slimiq_gk')||'';
+  if(!key)return null;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,maxOutputTokens:600}})});
+    const data=await res.json();
+    if(data.error)return null;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text||null;
+  }catch(e){return null;}
+}
+
+async function renderDailyTip(){
+  const b=calcBMI(),dc=dietCal();
+  const jobCtx={desk:'Sebagai pekerja kantoran yang banyak duduk',driver:'Sebagai pengemudi yang mobilitas tinggi',courier:'Sebagai kurir paket yang aktif',teacher:'Sebagai pengajar yang berdiri mengajar',homemaker:'Sebagai ibu/bapak rumah tangga',labor:'Sebagai pekerja fisik',student:'Sebagai pelajar/mahasiswa',health:'Sebagai tenaga kesehatan'}[S.job]||'Dengan pekerjaan harianmu';
+  const prompt=`Kamu AI health coach diet SlimIQ Indonesia. ${jobCtx}, pengguna bernama ${S.name||'pengguna'} memiliki: BB ${S.W}kg, TB ${S.H}cm, BMI ${b}, target ${S.T}kg, kalori hari ini ${S.kcal}/${dc} kkal${S.story?`, cerita: "${S.story.slice(0,80)}"`:''}.
+Berikan 2–3 kalimat saran pagi yang personal, hangat, dan praktis. Sertakan 1 tips spesifik sesuai jenis pekerjaannya. Mulai langsung tanpa salam.`;
+  const result=await callGemini(prompt);
+  document.getElementById('aiDailyMsg').innerHTML=(result||`Semangat pagi, <b>${S.name||'Pejuang'}</b>! 💪 Budget kalori harianmu ${dc} kkal — kamu sudah konsumsi ${S.kcal} kkal. ${S.job==='desk'?'Ingat berdiri dan jalan 2 menit setiap jam untuk melancarkan metabolisme!':S.job==='courier'?'Kamu sudah aktif hari ini! Pastikan asupan protein cukup untuk pemulihan otot.':'Jaga pola makanmu hari ini dan tetap konsisten dengan target.'}`).replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
+}
+async function refreshTip(){
+  const btn=document.getElementById('refreshTipBtn');btn.innerHTML='⏳ Loading...';btn.style.opacity='.6';btn.style.pointerEvents='none';
+  document.getElementById('aiDailyMsg').textContent='Menganalisa ulang...';await renderDailyTip();
+  btn.innerHTML='<span>↻</span> Refresh';btn.style.opacity='1';btn.style.pointerEvents='auto';
+}
+
+/* ══════════ AI CHAT ══════════ */
+async function sendAI(){const inp=document.getElementById('aiInp'),txt=inp.value.trim();if(!txt)return;inp.value='';askAI(txt);}
+async function askAI(q){
+  addMsg(q,'user');
+  const typing=addMsg('<div class="typing-dots"><span></span><span></span><span></span></div>','bot','typing');
+  const b=calcBMI(),dc=dietCal();
+  const p=`Kamu SlimIQ AI Coach Indonesia. Pengguna: ${S.name}, ${S.jobLabel}, BB ${S.W}kg, TB ${S.H}cm, BMI ${b}, target ${S.T}kg, kalori ${S.kcal}/${dc} kkal, kondisi: ${S.conds.join(',')||'sehat normal'}, pekerjaan: ${S.jobLabel}. Pertanyaan: ${q}. Jawab Bahasa Indonesia, padat, personal, max 150 kata.`;
+  const result=await callGemini(p);
+  typing.remove();
+  addMsg(result||`Maaf, AI Coach butuh koneksi ke Gemini. Untuk mengaktifkan, hubungi admin. Sementara itu cek menu Tips untuk panduan diet! 😊`,'bot');
+}
+function addMsg(txt,role,cls=''){const el=document.createElement('div');el.className=`ai-msg ${role} ${cls}`;el.innerHTML=txt;document.getElementById('aiMsgs').appendChild(el);document.getElementById('aiMsgs').scrollTop=9999;return el;}
+
+/* ══════════ QUOTES ══════════ */
+const QDATA={
+  'Islam':[
+    {q:'"Sesungguhnya Allah tidak mengubah keadaan suatu kaum sehingga mereka mengubah keadaan yang ada pada diri mereka sendiri."',src:'Al-Qur\'an, Ar-Ra\'d: 11',lesson:'Perubahan tubuhmu dimulai dari keputusanmu hari ini. Ubah dirimu, Allah akan ubah kondisimu.'},
+    {q:'"Dan makan dan minumlah, dan janganlah berlebih-lebihan."',src:'Al-Qur\'an, Al-A\'raf: 31',lesson:'Islam mengajarkan diet 1400 tahun lalu. Tidak berlebih-lebihan dalam makan adalah ibadah sekaligus kunci kesehatan.'},
+    {q:'"Mukmin yang kuat lebih baik dan lebih dicintai Allah daripada mukmin yang lemah."',src:'HR. Muslim',lesson:'Menjaga kesehatan tubuh adalah bagian dari iman. Badan sehat membuat kita lebih produktif beribadah.'},
+  ],
+  'Kristen':[
+    {q:'"Atau tidak tahukah kamu, bahwa tubuhmu adalah bait Roh Kudus yang diam di dalam kamu?"',src:'1 Korintus 6:19',lesson:'Menjaga tubuh adalah bentuk penghormatan kepada Tuhan. Diet dan hidup sehat adalah tanggung jawab rohani.'},
+    {q:'"Apakah kamu makan atau minum, lakukanlah semuanya itu untuk kemuliaan Allah."',src:'1 Korintus 10:31',lesson:'Pilihan makananmu setiap hari bisa menjadi bentuk ibadah. Makan sehat = memuliakan Tuhan dengan tubuhmu.'},
+  ],
+  'Tokoh Dunia':[
+    {q:'"Discipline is the bridge between goals and accomplishment."',src:'Jim Rohn',lesson:'Disiplin makan sehat setiap hari adalah jembatan antara berat badan ideal dan kondisimu hari ini.'},
+    {q:'"Take care of your body. It\'s the only place you have to live."',src:'Jim Rohn',lesson:'Tubuhmu adalah rumah satu-satunya seumur hidup. Tidak ada upgrade, tidak ada penggantian. Rawat sekarang.'},
+    {q:'"It does not matter how slowly you go as long as you do not stop."',src:'Konfusius',lesson:'Progress diet tidak harus cepat. Yang penting konsisten. 0.5kg/minggu selama setahun = 26kg hilang!'},
+  ],
+  'Kisah Nyata':[
+    {q:'"Saya pernah 136kg. Dokter bilang saya akan mati sebelum 50. Saya memilih hidup."',src:'Kisah nyata, turun 60kg dalam 2 tahun',lesson:'Banyak orang bangkit dari titik terendah. Bukan karena kemauan super — tapi karena keputusan kecil setiap hari.'},
+    {q:'"Yang paling sulit bukan memulai diet. Yang paling sulit adalah bangkit setelah 3 hari makan berlebihan."',src:'Komunitas diet online',lesson:'Satu hari buruk tidak menghancurkan progress. Yang menghancurkan adalah menyerah setelah hari buruk itu.'},
+  ],
+  'Sains':[
+    {q:'"Kamu tidak kurus karena makan sedikit. Kamu kurus karena konsisten."',src:'Prinsip metabolisme modern',lesson:'Satu hari makan banyak tidak membuatmu gemuk. Pola berlebih berminggu-minggu yang membuatmu gemuk.'},
+    {q:'"The best diet is the one you don\'t know you\'re on."',src:'Brian Wansink, Cornell University',lesson:'Diet terbaik adalah yang terasa seperti gaya hidup, bukan hukuman. Buat perubahan kecil yang sustainable.'},
+  ],
+};
+let activeQCat='Semua';
+function renderQuotes(){
+  const cats=['Semua',...Object.keys(QDATA)];
+  document.getElementById('qCatBtns').innerHTML=cats.map(c=>`<div class="qcat ${c===activeQCat?'on':''}" onclick="swQCat('${c}')">${c}</div>`).join('');
+  renderQList();renderFeaturedQ(getRandQ());
+}
+function getRandQ(cat){const pool=cat&&cat!=='Semua'?QDATA[cat]||[]:Object.values(QDATA).flat();return pool[Math.floor(Math.random()*pool.length)];}
+function renderFeaturedQ(q){if(!q)return;document.getElementById('qHeroText').textContent=q.q;document.getElementById('qHeroSrc').innerHTML=`— <b>${q.src}</b>`;document.getElementById('qHeroCtx').textContent=q.lesson;}
+function swQCat(cat){activeQCat=cat;document.querySelectorAll('.qcat').forEach(el=>el.classList.toggle('on',el.textContent===cat));renderQList();}
+function renderQList(){
+  const catMeta={'Islam':{ico:'🌙',col:'#d97706',bg:'rgba(217,119,6,.1)'},'Kristen':{ico:'✝️',col:'#2563eb',bg:'rgba(37,99,235,.1)'},'Tokoh Dunia':{ico:'🌍',col:'#0d9488',bg:'rgba(13,148,136,.1)'},'Kisah Nyata':{ico:'💪',col:'#dc2626',bg:'rgba(220,38,38,.1)'},'Sains':{ico:'🔬',col:'#8b5cf6',bg:'rgba(139,92,246,.1)'}};
+  let all=[];const keys=activeQCat==='Semua'?Object.keys(QDATA):[activeQCat];
+  keys.forEach(cat=>(QDATA[cat]||[]).forEach(q=>all.push({...q,cat})));
+  const m=c=>catMeta[c]||{ico:'✨',col:'var(--blue)',bg:'var(--blue-lt)'};
+  document.getElementById('qList').innerHTML=all.map(q=>`<div class="q-card"><div class="q-card-ico" style="background:${m(q.cat).bg};">${m(q.cat).ico}</div><div><div class="q-card-tag" style="color:${m(q.cat).col};">${q.cat}</div><div class="q-card-text">${q.q}</div><div class="q-card-src">— ${q.src}</div><div class="q-card-lesson">📖 ${q.lesson}</div></div></div>`).join('');
+}
+async function fetchQuoteAI(){
+  const btn=document.getElementById('qRefBtn');btn.innerHTML='⏳ Generating...';
+  document.getElementById('qHeroTag').textContent='✨ AI Quote';
+  const b=calcBMI(),dc=dietCal();
+  const p=`Motivator diet Indonesia. Buat SATU quote untuk ${S.name}, ${S.jobLabel}, BMI ${b}, target turun ${Math.abs(S.W-S.T)}kg. JSON saja tanpa markdown: {"quote":"...","source":"...","context":"...penjelasan relevansi ke diet 2 kalimat..."}`;
+  const res=await callGemini(p);
+  if(res){try{const d=JSON.parse(res.replace(/```json|```/g,'').trim());document.getElementById('qHeroText').textContent=`"${d.quote}"`;document.getElementById('qHeroSrc').innerHTML=`— <b>${d.source}</b>`;document.getElementById('qHeroCtx').textContent=d.context;}catch{renderFeaturedQ(getRandQ(activeQCat));}}
+  else renderFeaturedQ(getRandQ(activeQCat));
+  btn.innerHTML='<span>✨</span> Quote Baru (AI)';
+}
+
+/* ══════════ TIPS ══════════ */
+const TIPS={
+  'Semua':[
+    {n:'Minum sebelum makan',b:'2 gelas air 20–30 menit sebelum makan terbukti mengurangi kalori 13% per sajian. Haus sering salah diartikan sebagai lapar.'},
+    {n:'Protein di setiap makan',b:'Efek termis protein 25–30% — tubuh bakar lebih banyak kalori untuk mencernanya. Target 1.6–2g per kg berat badan.'},
+    {n:'Tidur adalah senjata rahasia',b:'Kurang tidur naikkan ghrelin (lapar) 28% & turunkan leptin (kenyang). 7–9 jam tidur = sama efektifnya dengan diet ketat.'},
+    {n:'Cheat meal, bukan cheat day',b:'Satu cheat meal/minggu jaga metabolisme tetap responsif. Hindari cheat day — bisa batalkan defisit kalori seminggu.'},
+    {n:'Makan perlahan, kunyah 20×',b:'Butuh 20 menit otak menerima sinyal kenyang. Makan lambat mengurangi asupan 15–20% secara otomatis.'},
+  ],
+  'Nutrisi':[
+    {n:'Karbo kompleks, bukan cepat',b:'Nasi merah, ubi, oat, quinoa — dicerna lambat → gula darah stabil → tidak cepat lapar → lebih sedikit disimpan sebagai lemak.'},
+    {n:'Lemak sehat wajib dimakan',b:'Alpukat, salmon, kacang, minyak zaitun — omega-3 justru membantu pembakaran lemak, bukan menyimpannya.'},
+    {n:'Serat dulu, baru sisanya',b:'Mulai makan dengan sayuran → perlambat penyerapan glukosa → gula stabil → lebih sedikit lemak tersimpan.'},
+  ],
+  'Olahraga':[
+    {n:'HIIT: 20 menit = 1 jam kardio',b:'High-Intensity Interval Training bakar kalori lebih efisien dan tingkatkan metabolisme 24 jam setelah latihan (EPOC effect).'},
+    {n:'Otot bakar lemak 24/7',b:'0.5kg otot extra = 50 kkal/hari saat istirahat. Resistance training adalah investasi metabolisme terbaik jangka panjang.'},
+    {n:'NEAT: Gerak harian tersembunyi',b:'Berdiri, jalan ke toilet, naik tangga bisa bakar 200–400 kkal extra/hari tanpa "berolahraga" formal.'},
+  ],
+  'Mindset':[
+    {n:'Identitas dulu, baru habit',b:'"Saya orang sehat" lebih kuat dari "saya mau diet". Identitas mengubah keputusan sehari-hari otomatis tanpa butuh willpower.'},
+    {n:'Progress bukan perfeksi',b:'Konsisten 80% lebih baik dari sempurna 20% waktu. Satu hari buruk tidak merusak — yang merusak adalah menyerah setelahnya.'},
+    {n:'Foto, bukan hanya timbangan',b:'Timbangan tidak bedakan lemak, otot, & air. Foto per 2 minggu jauh lebih akurat dan motivating untuk tracking progress.'},
+  ],
+};
+let tipCat='Semua';
+function renderTips(){
+  document.getElementById('tipChips').innerHTML=Object.keys(TIPS).map(c=>`<div class="tchip ${c===tipCat?'on':''}" onclick="swTip('${c}')">${c}</div>`).join('');
+  showTips();
+}
+function swTip(cat){tipCat=cat;document.querySelectorAll('.tchip').forEach(c=>c.classList.toggle('on',c.textContent===cat));showTips();}
+function showTips(){
+  const tips=TIPS[tipCat]||TIPS['Semua'];
+  document.getElementById('tipList').innerHTML=tips.map((t,i)=>`<div class="tip-box"><div class="tip-num">0${i+1}</div><div><div class="tip-title">${t.n}</div><div class="tip-body">${t.b}</div></div></div>`).join('');
+}
+
+/* ══════════ DAPUR ══════════ */
+const ING_DB={
+  'nasi putih':{e:'🍚',kcal:130,carb:28,prot:2.7,fat:0.3,fiber:0.4,vit:{A:0,C:0,B1:0.02,Fe:0.2,Ca:10}},
+  'nasi merah':{e:'🍚',kcal:111,carb:23,prot:2.5,fat:0.9,fiber:1.8,vit:{A:0,C:0,B1:0.18,Fe:0.5,Ca:10}},
+  'roti tawar':{e:'🍞',kcal:265,carb:49,prot:8,fat:3.2,fiber:2.4,vit:{A:0,C:0,B1:0.25,Fe:2.7,Ca:151}},
+  'kentang':{e:'🥔',kcal:77,carb:17,prot:2,fat:0.1,fiber:2.2,vit:{A:0,C:19.7,B1:0.08,Fe:0.8,Ca:12}},
+  'ubi':{e:'🍠',kcal:86,carb:20,prot:1.6,fat:0.1,fiber:3,vit:{A:709,C:2.4,B1:0.08,Fe:0.6,Ca:30}},
+  'oat':{e:'🌾',kcal:389,carb:66,prot:17,fat:7,fiber:10.6,vit:{A:0,C:0,B1:0.76,Fe:4.7,Ca:54}},
+  'jagung':{e:'🌽',kcal:86,carb:19,prot:3.2,fat:1.2,fiber:2.7,vit:{A:9,C:6.8,B1:0.16,Fe:0.5,Ca:2}},
+  'ayam':{e:'🐔',kcal:165,carb:0,prot:31,fat:3.6,fiber:0,vit:{A:10,C:0,B1:0.08,Fe:1,Ca:15}},
+  'dada ayam':{e:'🐔',kcal:165,carb:0,prot:31,fat:3.6,fiber:0,vit:{A:10,C:0,B1:0.08,Fe:1,Ca:15}},
+  'daging sapi':{e:'🥩',kcal:250,carb:0,prot:26,fat:16,fiber:0,vit:{A:6,C:0,B1:0.06,Fe:2.7,Ca:18}},
+  'ikan':{e:'🐟',kcal:136,carb:0,prot:20,fat:6,fiber:0,vit:{A:12,C:0,B1:0.14,Fe:0.5,Ca:20}},
+  'ikan salmon':{e:'🐟',kcal:208,carb:0,prot:20,fat:13,fiber:0,vit:{A:58,C:3.9,B1:0.23,Fe:0.8,Ca:12}},
+  'ikan tuna':{e:'🐟',kcal:144,carb:0,prot:23,fat:5,fiber:0,vit:{A:75,C:0,B1:0.25,Fe:1.3,Ca:10}},
+  'udang':{e:'🦐',kcal:99,carb:0,prot:24,fat:0.3,fiber:0,vit:{A:54,C:1.6,B1:0.03,Fe:3,Ca:70}},
+  'telur':{e:'🥚',kcal:155,carb:1.1,prot:13,fat:11,fiber:0,vit:{A:140,C:0,B1:0.07,Fe:1.8,Ca:50}},
+  'tahu':{e:'🫙',kcal:76,carb:1.9,prot:8,fat:4.8,fiber:0.3,vit:{A:0,C:0.1,B1:0.08,Fe:5.4,Ca:350}},
+  'tempe':{e:'🧆',kcal:193,carb:9,prot:19,fat:11,fiber:1.4,vit:{A:0,C:0,B1:0.08,Fe:2.7,Ca:111}},
+  'kacang tanah':{e:'🥜',kcal:567,carb:16,prot:26,fat:49,fiber:8.5,vit:{A:0,C:0,B1:0.64,Fe:4.6,Ca:92}},
+  'edamame':{e:'🫘',kcal:121,carb:8.9,prot:11,fat:5.2,fiber:5.2,vit:{A:9,C:9.7,B1:0.15,Fe:2.3,Ca:63}},
+  'bayam':{e:'🌿',kcal:23,carb:3.6,prot:2.9,fat:0.4,fiber:2.2,vit:{A:469,C:28,B1:0.08,Fe:2.7,Ca:99}},
+  'brokoli':{e:'🥦',kcal:34,carb:7,prot:2.8,fat:0.4,fiber:2.6,vit:{A:31,C:89.2,B1:0.07,Fe:0.7,Ca:47}},
+  'wortel':{e:'🥕',kcal:41,carb:10,prot:0.9,fat:0.2,fiber:2.8,vit:{A:835,C:5.9,B1:0.07,Fe:0.3,Ca:33}},
+  'tomat':{e:'🍅',kcal:18,carb:3.9,prot:0.9,fat:0.2,fiber:1.2,vit:{A:42,C:13.7,B1:0.04,Fe:0.3,Ca:10}},
+  'timun':{e:'🥒',kcal:15,carb:3.6,prot:0.7,fat:0.1,fiber:0.5,vit:{A:5,C:2.8,B1:0.03,Fe:0.3,Ca:16}},
+  'kubis':{e:'🥬',kcal:25,carb:6,prot:1.3,fat:0.1,fiber:2.5,vit:{A:5,C:36.6,B1:0.06,Fe:0.5,Ca:40}},
+  'kangkung':{e:'🌿',kcal:19,carb:3.1,prot:2.6,fat:0.2,fiber:2.1,vit:{A:315,C:55,B1:0.1,Fe:2.5,Ca:77}},
+  'paprika':{e:'🫑',kcal:31,carb:7,prot:1,fat:0.3,fiber:2.1,vit:{A:157,C:127.7,B1:0.05,Fe:0.4,Ca:7}},
+  'bawang putih':{e:'🧄',kcal:149,carb:33,prot:6.4,fat:0.5,fiber:2.1,vit:{A:0,C:31.2,B1:0.2,Fe:1.7,Ca:181}},
+  'pisang':{e:'🍌',kcal:89,carb:23,prot:1.1,fat:0.3,fiber:2.6,vit:{A:3,C:8.7,B1:0.03,Fe:0.3,Ca:5}},
+  'apel':{e:'🍎',kcal:52,carb:14,prot:0.3,fat:0.2,fiber:2.4,vit:{A:3,C:4.6,B1:0.02,Fe:0.1,Ca:6}},
+  'alpukat':{e:'🥑',kcal:160,carb:9,prot:2,fat:15,fiber:6.7,vit:{A:7,C:10,B1:0.07,Fe:0.6,Ca:12}},
+  'pepaya':{e:'🫐',kcal:43,carb:11,prot:0.5,fat:0.3,fiber:1.7,vit:{A:47,C:61.8,B1:0.03,Fe:0.3,Ca:20}},
+  'jeruk':{e:'🍊',kcal:47,carb:12,prot:0.9,fat:0.1,fiber:2.4,vit:{A:11,C:53.2,B1:0.09,Fe:0.1,Ca:40}},
+  'susu sapi':{e:'🥛',kcal:61,carb:4.8,prot:3.2,fat:3.3,fiber:0,vit:{A:46,C:0,B1:0.04,Fe:0,Ca:113}},
+  'greek yogurt':{e:'🥛',kcal:59,carb:3.6,prot:10,fat:0.4,fiber:0,vit:{A:6,C:0,B1:0.02,Fe:0,Ca:110}},
+  'telur ayam':{e:'🥚',kcal:155,carb:1.1,prot:13,fat:11,fiber:0,vit:{A:140,C:0,B1:0.07,Fe:1.8,Ca:50}},
+  'minyak zaitun':{e:'🫒',kcal:884,carb:0,prot:0,fat:100,fiber:0,vit:{A:0,C:0,B1:0,Fe:0,Ca:0}},
+  'santan':{e:'🥥',kcal:230,carb:5.5,prot:2.3,fat:24,fiber:2.2,vit:{A:0,C:2.8,B1:0.03,Fe:1.6,Ca:16}},
+};
+const QUICK_INGS=['Nasi','Ayam','Telur','Tahu','Tempe','Brokoli','Bayam','Wortel','Ikan','Tomat','Kentang','Pisang'];
+const SUG_PRESETS=['Sarapan tinggi protein bahan sederhana','Menu makan siang rendah karbo','Makanan diet untuk malam hari','Cemilan sehat di bawah 200 kkal','Menu buka puasa sehat','Smoothie bergizi untuk diet'];
+const RECIPES=[
+  {e:'🥗',name:'Salad Ayam Panggang',kcal:320,prot:35,carb:12,fat:14,fiber:4,time:'20 mnt',sub:'Tinggi protein, rendah karbo — diet sempurna',ings:['Dada ayam 150g','Selada 50g','Tomat 60g','Timun 50g','Olive oil 10g'],steps:['Panggang dada ayam 15 menit dengan sedikit olive oil & garam.','Iris tipis ayam, siapkan sayuran segar.','Campur, peras jeruk nipis. Sajikan segar.'],tags:['Tinggi Protein','Rendah Karbo']},
+  {e:'🍳',name:'Omelette Sayur',kcal:245,prot:18,carb:6,fat:16,fiber:2,time:'10 mnt',sub:'Sarapan cepat bergizi, kenyang hingga siang',ings:['Telur 2 butir','Paprika ½','Bayam segenggam','Bawang bombay ¼'],steps:['Kocok telur dengan garam & merica.','Tumis sayuran sebentar hingga layu.','Tuang kocokan telur, lipat jadi omelette.'],tags:['Cepat','Sarapan','Keto']},
+  {e:'🍲',name:'Sup Tahu Bayam',kcal:180,prot:14,carb:10,fat:8,fiber:3,time:'25 mnt',sub:'Hangat, bergizi, dan mengenyangkan rendah kalori',ings:['Tahu 200g','Bayam 100g','Wortel 80g','Kaldu ayam 500ml','Jahe sedikit'],steps:['Rebus kaldu dengan jahe & bawang putih.','Masukkan wortel & tahu, masak 5 menit.','Masukkan bayam terakhir. Sajikan hangat.'],tags:['Rendah Kalori','Anti-Inflamasi']},
+  {e:'🌯',name:'Wrap Lettuce Tuna',kcal:210,prot:28,carb:5,fat:8,fiber:2,time:'10 mnt',sub:'Tanpa nasi, tanpa roti — tetap kenyang',ings:['Tuna kaleng 100g','Selada besar 4 lembar','Tomat ½','Greek yogurt 30g'],steps:['Campur tuna dengan yogurt & lemon.','Susun isian di atas daun selada.','Gulung dan sajikan segera.'],tags:['No-Carb','Tinggi Protein']},
+  {e:'🥘',name:'Tumis Tempe Brokoli',kcal:290,prot:22,carb:18,fat:13,fiber:6,time:'20 mnt',sub:'Protein nabati lengkap dengan serat tinggi',ings:['Tempe 150g','Brokoli 200g','Bawang putih 4 siung','Kecap rendah sodium'],steps:['Panggang tempe dadu tanpa minyak.','Tumis bawang putih, masukkan brokoli & tempe.','Tambahkan kecap, aduk rata. Sajikan.'],tags:['Vegan','Tinggi Serat']},
+  {e:'🍵',name:'Smoothie Hijau Energi',kcal:185,prot:8,carb:28,fat:5,fiber:7,time:'5 mnt',sub:'Sarapan cair bergizi untuk yang sibuk',ings:['Pisang beku 1','Bayam 30g','Susu kedelai 200ml','Greek yogurt 50g'],steps:['Masukkan semua bahan ke blender.','Blend hingga halus dan creamy.','Konsumsi segera untuk nutrisi optimal.'],tags:['Cepat','Sarapan','Detox']},
+];
+
+let ings=[],selIng=null,lastRes=null;
+function renderDapur(){
+  document.getElementById('qIngChips').innerHTML=QUICK_INGS.map(n=>`<button class="qchip" onclick="quickAddIng('${n.toLowerCase()}')">${ING_DB[n.toLowerCase()]?.e||'🌿'} ${n}</button>`).join('');
+  document.getElementById('sugChips').innerHTML=SUG_PRESETS.map(p=>`<button class="sug-chip" onclick="document.getElementById('sugInp').value='${p}'">${p}</button>`).join('');
+  renderRecipes();
+}
+function swDapur(mode,el){
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  document.getElementById('dAnalyze').style.display=mode==='analyze'?'block':'none';
+  document.getElementById('dRecipe').style.display=mode==='recipe'?'block':'none';
+  document.getElementById('dSuggest').style.display=mode==='suggest'?'block':'none';
+}
+function ingAC(val){
+  const q=val.toLowerCase().trim(),dd=document.getElementById('ingDD'),pr=document.getElementById('portRow');
+  if(!q){dd.classList.remove('open');pr.style.display='none';selIng=null;return;}
+  const m=Object.entries(ING_DB).filter(([k])=>k.includes(q)).slice(0,8);
+  if(!m.length){dd.innerHTML=`<div class="ing-ac-item" onclick="selCustom('${val}')"><div class="ing-ac-name">✏️ "${val}" (kustom)</div><div style="font-size:.65rem;color:var(--text3);">AI akan kalkulasi gizinya</div></div>`;dd.classList.add('open');return;}
+  dd.innerHTML=m.map(([k,v])=>`<div class="ing-ac-item" onclick="selIng2('${k}')"><div class="ing-ac-name">${v.e} ${k}</div><div class="ing-ac-cal">${v.kcal} kkal/100g</div></div>`).join('');
+  dd.classList.add('open');pr.style.display='none';selIng=null;
+}
+function ingKey(e){if(e.key==='Enter'){const v=document.getElementById('ingInp').value.trim();if(v)selCustom(v);}if(e.key==='Escape')document.getElementById('ingDD').classList.remove('open');}
+function selIng2(name){selIng=name;document.getElementById('ingInp').value=name;document.getElementById('ingDD').classList.remove('open');document.getElementById('portRow').style.display='flex';document.getElementById('portGram').focus();}
+function selCustom(name){selIng='__c__:'+name;document.getElementById('ingInp').value=name;document.getElementById('ingDD').classList.remove('open');document.getElementById('portRow').style.display='flex';document.getElementById('portGram').focus();}
+function setGram(g){document.getElementById('portGram').value=g;document.querySelectorAll('.sbtn').forEach(b=>{const n=parseInt(b.textContent);b.classList.toggle('on',n===g);});}
+function addIngFS(){const g=parseInt(document.getElementById('portGram').value)||100;if(!selIng)return;if(selIng.startsWith('__c__:'))addIng(selIng.replace('__c__:',''),g,null);else addIng(selIng,g,ING_DB[selIng]);document.getElementById('ingInp').value='';document.getElementById('portRow').style.display='none';selIng=null;}
+function quickAddIng(name){addIng(name,100,ING_DB[name]);}
+function addIng(name,gram,data){ings.push({name,gram,data});renderIngTags();toast(`${data?.e||'🌿'} ${name} ditambahkan (${gram}g)`);}
+function renderIngTags(){
+  const area=document.getElementById('ingTags');
+  if(!ings.length){area.innerHTML='';area.classList.add('empty');return;}
+  area.classList.remove('empty');
+  area.innerHTML=ings.map((i,idx)=>`<div class="ing-tag"><span>${i.data?.e||'🌿'}</span><span style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.name}</span><span class="ing-tag-gram">${i.gram}g</span><span class="ing-tag-del" onclick="removeIng(${idx})">✕</span></div>`).join('');
+}
+function removeIng(i){ings.splice(i,1);renderIngTags();}
+document.addEventListener('click',e=>{if(!e.target.closest('.ing-search-wrap'))document.getElementById('ingDD').classList.remove('open');});
+
+async function doAnalyze(){
+  if(!ings.length){toast('⚠️ Tambahkan bahan terlebih dahulu!');return;}
+  const btn=document.getElementById('aBtn');btn.classList.add('loading');btn.innerHTML='<span class="spin">⏳</span> Menganalisa...';
+  const serv=parseInt(document.getElementById('servCnt').value)||1;
+  const dishName=document.getElementById('dishNm').value.trim()||ings.slice(0,3).map(i=>i.name.charAt(0).toUpperCase()+i.name.slice(1)).join(' + ');
+  let totK=0,totC=0,totP=0,totF=0,totFi=0,vit={A:0,C:0,B1:0,Fe:0,Ca:0};
+  ings.forEach(ing=>{const r=ing.gram/100;if(ing.data){totK+=ing.data.kcal*r;totC+=ing.data.carb*r;totP+=ing.data.prot*r;totF+=ing.data.fat*r;totFi+=ing.data.fiber*r;if(ing.data.vit){vit.A+=(ing.data.vit.A||0)*r;vit.C+=(ing.data.vit.C||0)*r;vit.B1+=(ing.data.vit.B1||0)*r;vit.Fe+=(ing.data.vit.Fe||0)*r;vit.Ca+=(ing.data.vit.Ca||0)*r;}}});
+  const iList=ings.map(i=>`${i.name} ${i.gram}g`).join(', ');
+  let ai=null;
+  const p=`Ahli gizi. Analisa gizi per sajian: ${dishName}, bahan: ${iList}, ${serv} sajian. JSON saja: {"kcal":num,"carb":num,"prot":num,"fat":num,"fiber":num,"sodium":num,"sugar":num,"vitA":pct,"vitC":pct,"iron":pct,"calcium":pct,"dish_emoji":"emoji","dish_desc":"1 kalimat","diet_score":"A/B/C/D","diet_score_reason":"2 kalimat","ai_tips":"saran chef 3 kalimat"}`;
+  const res=await callGemini(p);
+  if(res){try{ai=JSON.parse(res.replace(/```json|```/g,'').trim());totK=ai.kcal;totC=ai.carb;totP=ai.prot;totF=ai.fat;if(ai.fiber)totFi=ai.fiber;}catch{}}
+  const ps=n=>Math.round(n/serv),kcal=ps(totK),carb=Math.round(totC/serv),prot=Math.round(totP/serv),fat=Math.round(totF/serv),fiber=Math.round(totFi/serv),dc=dietCal(),kp=Math.round((kcal/dc)*100);
+  let sg='B',sr='Estimasi berdasarkan komposisi makronutrien.';
+  if(ai){sg=ai.diet_score||'B';sr=ai.diet_score_reason||sr;}
+  else{const s=(prot/(kcal||1)*4>0.25?2:1)+(fiber>=5?2:fiber>=2?1:0)+(kcal<300?2:kcal<500?1:0);sg=s>=5?'A':s>=3?'B':s>=2?'C':'D';}
+  const sc={A:['var(--green)','rgba(16,185,129,.2)'],B:['var(--blue)','rgba(37,99,235,.2)'],C:['var(--amber)','rgba(245,158,11,.2)'],D:['var(--coral)','rgba(239,68,68,.2)']}[sg]||['var(--blue)','rgba(37,99,235,.2)'];
+  lastRes={kcal,carb,prot,fat,fiber,dishName,serv};
+  document.getElementById('rDishNm').textContent=dishName;
+  document.getElementById('rEmoji').textContent=ai?.dish_emoji||ings[0]?.data?.e||'🍽️';
+  document.getElementById('rDesc').textContent=ai?.dish_desc||`Analisa dari ${ings.length} bahan — ${serv} sajian`;
+  document.getElementById('rKcal').textContent=kcal;document.getElementById('rKPct').textContent=kp+'%';
+  const bc=kp>50?'fr':kp>30?'fp':'fb';document.getElementById('rKBar').className='cal-bar-fill '+bc;
+  setTimeout(()=>{document.getElementById('rKBar').style.width=Math.min(kp,100)+'%';},100);
+  const mt=carb+prot+fat||1;
+  document.getElementById('rCarb').textContent=carb+'g';document.getElementById('rProt').textContent=prot+'g';document.getElementById('rFat').textContent=fat+'g';document.getElementById('rFiber').textContent=fiber+'g';
+  setTimeout(()=>{document.getElementById('rCarbBar').style.width=Math.min((carb/mt)*100,100)+'%';document.getElementById('rProtBar').style.width=Math.min((prot/mt)*100,100)+'%';document.getElementById('rFatBar').style.width=Math.min((fat/mt)*100,100)+'%';document.getElementById('rFiberBar').style.width=Math.min((fiber/10)*100,100)+'%';},200);
+  const vd=ai?[{d:'#f59e0b',n:'Vitamin A',v:`${ai.vitA||Math.round(vit.A/9)}%`},{d:'#dc2626',n:'Vitamin C',v:`${ai.vitC||Math.round(vit.C/0.9)}%`},{d:'#10b981',n:'Zat Besi',v:`${ai.iron||Math.round(vit.Fe/0.18)}%`},{d:'#3b82f6',n:'Kalsium',v:`${ai.calcium||Math.round(vit.Ca/13)}%`},{d:'#8b5cf6',n:'Sodium',v:`${ai.sodium||'-'} mg`},{d:'#ec4899',n:'Gula',v:`${ai.sugar||'-'} g`}]:[{d:'#f59e0b',n:'Vitamin A',v:`${Math.round(vit.A/9)}% AKG`},{d:'#dc2626',n:'Vitamin C',v:`${Math.round(vit.C/0.9)}% AKG`},{d:'#10b981',n:'Zat Besi',v:`${Math.round(vit.Fe/0.18)}% AKG`},{d:'#3b82f6',n:'Kalsium',v:`${Math.round(vit.Ca/13)}% AKG`},{d:'#8b5cf6',n:'Vitamin B1',v:`${Math.round(vit.B1/0.012)}% AKG`},{d:'#10b981',n:'Serat',v:fiber>=5?'✅ Cukup':fiber>=2?'⚠️ Sedang':'❌ Kurang'}];
+  document.getElementById('rVits').innerHTML=vd.map(v=>`<div class="vit-item"><div class="vit-dot" style="background:${v.d}"></div><div class="vit-name">${v.n}</div><div class="vit-val">${v.v}</div></div>`).join('');
+  const circ=document.getElementById('rScoreCircle');circ.textContent=sg;circ.style.borderColor=sc[0];circ.style.color=sc[0];circ.style.background=sc[1];
+  document.getElementById('rScoreTxt').innerHTML=`<b>Skor Diet: ${sg}</b> — ${sr}`;
+  const tips=ai?.ai_tips||`${kcal>dc*.4?'Porsi ini cukup berat. Pertimbangkan kurangi minyak atau bahan berlemak tinggi. ':''} ${prot<15?'Protein rendah. Tambahkan telur, ayam, atau tempe untuk kenyang lebih lama. ':''}${fiber<3?'Serat kurang. Tambahkan sayuran hijau seperti brokoli atau bayam. ':''} ${!kcal||kcal<=dc*.3?`Komposisi gizi sudah baik! Dengan ${prot}g protein dan ${fiber}g serat, ini pilihan smart. Konsumsi dengan 2 gelas air putih. `:''}`.trim()||`Analisa selesai! ${kcal} kkal per sajian dengan ${prot}g protein. Cocok untuk target diet kamu.`;
+  document.getElementById('rAITip').innerHTML=`<b>💡 Saran Chef AI:</b><br>${tips}`;
+  document.getElementById('nutResult').style.display='block';document.getElementById('nutResult').scrollIntoView({behavior:'smooth',block:'start'});
+  btn.classList.remove('loading');btn.innerHTML='<span>🔬</span> Analisa Ulang';toast(`✅ ${kcal} kkal/sajian`);
+}
+function addResLog(){if(!lastRes)return;S.kcal+=lastRes.kcal;S.foodLog.push({name:lastRes.dishName,cal:lastRes.kcal,emoji:'🍳'});updateFoodLog();toast(`✅ ${lastRes.dishName} (${lastRes.kcal} kkal) ditambahkan!`);nav('kalori',document.querySelector('.npill[onclick*="kalori"]'));}
+
+function renderRecipes(){
+  document.getElementById('recipeLib').innerHTML=RECIPES.map((r,i)=>`<div class="recipe-card" onclick="showRecDet(${i})"><div class="recipe-card-h"><div class="rec-emoji">${r.e}</div><div><div class="rec-name">${r.name}</div><div class="rec-sub">${r.sub}</div><div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.45rem;">${r.tags.map(t=>`<span class="tag tg" style="font-size:.55rem;">${t}</span>`).join('')}</div></div></div><div class="recipe-meta"><div class="rmeta">⏱ <b>${r.time}</b></div><div class="rmeta">🔥 <b>${r.kcal} kkal</b></div><div class="rmeta">💪 <b>${r.prot}g</b> protein</div><div class="rmeta">🌿 <b>${r.fiber}g</b> serat</div></div></div>`).join('');
+}
+function showRecDet(i){
+  const r=RECIPES[i],ex=document.getElementById('recipeModal');if(ex)ex.remove();
+  const m=document.createElement('div');m.id='recipeModal';
+  m.innerHTML=`<div style="max-width:480px;margin:0 auto;"><button onclick="document.getElementById('recipeModal').remove()" style="background:white;border:1.5px solid var(--border);color:var(--text2);border-radius:100px;padding:.32rem .9rem;font-size:.76rem;cursor:pointer;margin-bottom:1rem;font-family:'Plus Jakarta Sans',sans-serif;">← Kembali</button>
+  <div style="font-size:2.8rem;margin-bottom:.4rem;">${r.e}</div>
+  <div style="font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:.2rem;">${r.name}</div>
+  <div style="font-size:.75rem;color:var(--text3);margin-bottom:.9rem;">${r.sub}</div>
+  <div class="result-card" style="margin-bottom:.9rem;">
+    <div class="kcal-hero"><div class="kcal-big" style="font-size:2.2rem;">${r.kcal}</div><div class="kcal-unit">kkal<br>/sajian</div><div class="kcal-pct-box"><div class="kcal-pct">${Math.round((r.kcal/dietCal())*100)}%</div><div class="kcal-pct-lbl">budget harian</div></div></div>
+    <div class="nutri-grid"><div class="nutri-box"><div class="nutri-val" style="color:#0d9488;">${r.carb}g</div><div class="nutri-lbl">Karbo</div></div><div class="nutri-box"><div class="nutri-val" style="color:var(--blue);">${r.prot}g</div><div class="nutri-lbl">Protein</div></div><div class="nutri-box"><div class="nutri-val" style="color:var(--amber);">${r.fat}g</div><div class="nutri-lbl">Lemak</div></div><div class="nutri-box"><div class="nutri-val" style="color:var(--purple);">${r.fiber}g</div><div class="nutri-lbl">Serat</div></div></div>
+  </div>
+  <div style="font-family:'Nunito',sans-serif;font-weight:900;color:var(--text);margin-bottom:.55rem;">🛒 Bahan-bahan</div>
+  <div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:.9rem;">${r.ings.map(ing=>`<div style="display:flex;align-items:center;gap:.55rem;padding:.48rem .8rem;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;font-size:.78rem;color:var(--text);">✓ ${ing}</div>`).join('')}</div>
+  <div style="font-family:'Nunito',sans-serif;font-weight:900;color:var(--text);margin-bottom:.55rem;">👨‍🍳 Cara Memasak</div>
+  <div style="display:flex;flex-direction:column;gap:.45rem;margin-bottom:1.1rem;">${r.steps.map((s,si)=>`<div style="display:flex;gap:.7rem;padding:.7rem;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow);"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue-lt);border:1.5px solid rgba(37,99,235,.2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--blue);flex-shrink:0;">${si+1}</div><div style="font-size:.78rem;line-height:1.6;color:var(--text2);">${s}</div></div>`).join('')}</div>
+  <button class="analyze-btn" style="background:linear-gradient(135deg,var(--teal),var(--teal2));" onclick="addRecLog(${i});document.getElementById('recipeModal').remove();">➕ Tambahkan ke Log Kalori</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+function addRecLog(i){const r=RECIPES[i];S.kcal+=r.kcal;S.foodLog.push({name:r.name,cal:r.kcal,emoji:r.e});updateFoodLog();toast(`${r.e} ${r.name} (${r.kcal} kkal) ditambahkan!`);}
+
+async function doSuggest(){
+  const inp=document.getElementById('sugInp').value.trim();if(!inp){toast('⚠️ Ceritakan kebutuhanmu!');return;}
+  const btn=document.getElementById('sugBtn');btn.classList.add('loading');btn.innerHTML='<span class="spin">⏳</span> AI memikirkan menu...';
+  document.getElementById('sugResult').style.display='none';
+  const b=calcBMI(),dc=dietCal();
+  const p=`Chef & ahli gizi Indonesia. Pengguna: ${S.name}, ${S.jobLabel}, BB ${S.W}kg, BMI ${b}, budget ${dc} kkal/hari, goal: ${S.goal}, kondisi: ${S.conds.join(',')||'sehat normal'}. Permintaan: ${inp}. Berikan 2–3 saran menu dengan kalori, makro, bahan, dan cara memasak. Format jelas dengan emoji. Bahasa Indonesia.`;
+  const res=await callGemini(p);
+  const el=document.getElementById('sugContent');
+  el.innerHTML=(res||'Aktifkan Gemini API melalui admin untuk fitur saran menu AI. Sementara itu, cek menu Resep Sehat! 🍳').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  document.getElementById('sugResult').style.display='block';document.getElementById('sugResult').scrollIntoView({behavior:'smooth'});
+  btn.classList.remove('loading');btn.innerHTML='<span>✨</span> Minta Saran AI';
+}
+
+/* ══════════ ACTIONS ══════════ */
+function chkAct(el){
+  el.classList.toggle('done');el.querySelector('.act-chk').textContent=el.classList.contains('done')?'✓':'';
+  const tot=document.querySelectorAll('.act-item').length,done=document.querySelectorAll('.act-item.done').length;
+  document.getElementById('doneTag').textContent=`${done}/${tot} selesai`;
+  if(done===tot)toast('🏆 Semua aksi selesai!');else if(el.classList.contains('done'))toast('✅ Selesai!');
+}
+
+/* ══════════ NAV & TOAST ══════════ */
+function nav(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.npill').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('on');el.classList.add('active');
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ══════════ INIT SLIDERS ══════════ */
+['rA','rW','rH','rT'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){const min=+el.min,max=+el.max,v=+el.value;el.style.setProperty('--pct',((v-min)/(max-min)*100)+'%');}
+});
+</script>
+</body>
+</html>
