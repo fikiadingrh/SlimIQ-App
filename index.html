@@ -1210,6 +1210,7 @@ main{padding:1.2rem;max-width:860px;margin:0 auto;}
     <button class="npill" onclick="nav('dapur',this)">🍳 Dapur</button>
     <button class="npill" onclick="nav('quotes',this)">✨ Quotes</button>
     <button class="npill" onclick="nav('tips',this)">💡 Tips</button>
+    <button class="npill" id="jurnalPill" onclick="nav('jurnal',this)">📓 Jurnal <span id="jurnalDot" style="display:none;width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;vertical-align:middle;margin-left:2px;animation:pulsered 2s infinite;"></span></button>
   </div>
   <div class="streak-tag">🔥 <span id="streakNum">1</span>h</div>
 </nav>
@@ -1268,6 +1269,14 @@ main{padding:1.2rem;max-width:860px;margin:0 auto;}
     </div>
     <div class="daily-tip-box" id="aiDailyMsg">Memuat saran harianmu...</div>
     <button class="q-refresh-btn" style="margin-top:.7rem;border:1.5px solid rgba(37,99,235,.25);color:var(--blue);background:rgba(37,99,235,.06);" onclick="refreshTip()" id="refreshTipBtn"><span>↻</span> Refresh</button>
+  </div>
+  <!-- JURNAL PEEK -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><div class="card-icon" style="background:rgba(245,158,11,.1);">📓</div> Jurnal Harian</div>
+      <span class="tag to">Check-in</span>
+    </div>
+    <div id="jurnalDashPeek"></div>
   </div>
   <!-- ACTIONS -->
   <div class="card">
@@ -1520,8 +1529,196 @@ main{padding:1.2rem;max-width:860px;margin:0 auto;}
   <div class="tip-list" id="tipList"></div>
 </div>
 
+<!-- ════ JURNAL ════ -->
+<div class="sec" id="sec-jurnal">
+  <div class="pg-eyebrow">Pantau Aktivitas</div>
+  <div class="pg-h">Jurnal <em>harian</em> & laporan mingguan</div>
+
+  <!-- CHECK-IN BANNER (muncul saat jam 8 malam / bisa dipanggil kapan saja) -->
+  <div id="checkinBanner" style="display:none;margin-bottom:.9rem;">
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:var(--r);padding:1.4rem 1.2rem;color:white;box-shadow:0 8px 32px rgba(37,99,235,.25);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:6rem;opacity:.07;pointer-events:none;">🌙</div>
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:.4rem;">Check-in Malam · <span id="checkinDateLbl"></span></div>
+      <div style="font-family:'Nunito',sans-serif;font-size:1.25rem;font-weight:900;margin-bottom:.3rem;">Hai, <span id="checkinName"></span>! 🌙</div>
+      <div style="font-size:.8rem;opacity:.85;line-height:1.6;margin-bottom:1rem;">Hari ini sudah berakhir. Ceritakan aktivitas & makanmu — AI akan merangkumnya jadi laporan personal untukmu!</div>
+      <button onclick="openCheckin()" style="background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);color:white;border-radius:12px;padding:.7rem 1.3rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.45rem;">✏️ Isi Check-in Sekarang</button>
+    </div>
+  </div>
+
+  <!-- TABS: Hari ini / Riwayat / Laporan Mingguan -->
+  <div class="mode-tabs" style="margin-bottom:1rem;">
+    <button class="mode-tab on" id="jTab1" onclick="swJTab('today',this)">📋 Hari Ini</button>
+    <button class="mode-tab" id="jTab2" onclick="swJTab('history',this)">📅 Riwayat</button>
+    <button class="mode-tab" id="jTab3" onclick="swJTab('weekly',this)">📊 Mingguan</button>
+  </div>
+
+  <!-- ─── TAB: HARI INI ─── -->
+  <div id="jToday">
+    <!-- Status hari ini -->
+    <div id="jTodayEmpty" class="card" style="text-align:center;padding:2rem 1.2rem;">
+      <div style="font-size:3rem;margin-bottom:.7rem;">📝</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:.35rem;">Belum ada catatan hari ini</div>
+      <div style="font-size:.78rem;color:var(--text3);line-height:1.7;margin-bottom:1.1rem;">Check-in malam tersedia setiap hari pukul <b>20:00</b>.<br>Tapi kamu bisa isi kapan saja sebelum tidur!</div>
+      <button onclick="openCheckin()" style="background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border:none;border-radius:12px;padding:.8rem 1.6rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.3);transition:all .22s;">✏️ Isi Check-in Sekarang</button>
+    </div>
+    <div id="jTodayDone" style="display:none;">
+      <!-- Summary card hari ini -->
+      <div id="jTodaySummaryCard"></div>
+      <!-- AI Analysis -->
+      <div class="card" id="jTodayAICard">
+        <div class="card-head">
+          <div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">🤖</div> Analisa AI Hari Ini</div>
+          <span class="tag tb">AI</span>
+        </div>
+        <div id="jTodayAIMsg" style="font-size:.8rem;color:var(--text2);line-height:1.8;">Menganalisa harianmu...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB: RIWAYAT ─── -->
+  <div id="jHistory" style="display:none;">
+    <div id="jHistoryList"></div>
+  </div>
+
+  <!-- ─── TAB: LAPORAN MINGGUAN ─── -->
+  <div id="jWeekly" style="display:none;">
+    <div id="jWeeklyEmpty" class="card" style="text-align:center;padding:2rem 1.2rem;">
+      <div style="font-size:2.8rem;margin-bottom:.6rem;">📊</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;color:var(--text);margin-bottom:.3rem;">Laporan belum tersedia</div>
+      <div style="font-size:.76rem;color:var(--text3);line-height:1.7;">Isi check-in minimal <b>3 hari</b> dalam seminggu untuk mendapatkan laporan mingguan dari AI.</div>
+    </div>
+    <div id="jWeeklyContent" style="display:none;">
+      <div id="jWeeklyCard"></div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div><!-- end app -->
+
+<!-- ═══════════════════════════════
+     CHECK-IN MODAL
+═══════════════════════════════ -->
+<div id="checkinModal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(15,23,42,.5);backdrop-filter:blur(6px);overflow-y:auto;padding:1rem;align-items:flex-start;justify-content:center;">
+  <div style="max-width:480px;width:100%;margin:0 auto;background:white;border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:1.3rem 1.4rem;color:white;position:relative;">
+      <div style="position:absolute;top:-15px;right:-15px;font-size:5rem;opacity:.08;pointer-events:none;">🌙</div>
+      <button onclick="closeCheckin()" style="position:absolute;top:.8rem;right:.9rem;background:rgba(255,255,255,.15);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.65;margin-bottom:.25rem;">Check-in Malam · <span id="ciDateHdr"></span></div>
+      <div style="font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:900;">Cerita Harianmu 🌙</div>
+      <div style="font-size:.75rem;opacity:.8;margin-top:.2rem;">Santai saja, tulis seperti cerita ke teman</div>
+    </div>
+
+    <!-- Progress steps in modal -->
+    <div style="display:flex;padding:.85rem 1.4rem .4rem;gap:.3rem;" id="ciStepBar">
+      <div style="flex:1;height:3px;border-radius:2px;background:var(--blue);" id="cib1"></div>
+      <div style="flex:1;height:3px;border-radius:2px;background:var(--border);" id="cib2"></div>
+      <div style="flex:1;height:3px;border-radius:2px;background:var(--border);" id="cib3"></div>
+    </div>
+
+    <!-- STEP 1: Mood -->
+    <div id="ci1" style="padding:1.1rem 1.4rem 1.4rem;">
+      <div style="font-size:.65rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.5rem;">Langkah 1 dari 3 — Mood Hari Ini</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.9rem;">Secara keseluruhan, hari ini bagaimana? 😊</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:1.1rem;" id="moodGrid">
+        <div class="mood-btn" onclick="pickMood(this,1,'😩','Berat')" style="text-align:center;padding:.65rem .3rem;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;"><div style="font-size:1.5rem;">😩</div><div style="font-size:.6rem;color:var(--text3);margin-top:.2rem;font-weight:600;">Berat</div></div>
+        <div class="mood-btn" onclick="pickMood(this,2,'😕','Kurang')" style="text-align:center;padding:.65rem .3rem;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;"><div style="font-size:1.5rem;">😕</div><div style="font-size:.6rem;color:var(--text3);margin-top:.2rem;font-weight:600;">Kurang</div></div>
+        <div class="mood-btn" onclick="pickMood(this,3,'😐','Biasa')" style="text-align:center;padding:.65rem .3rem;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;"><div style="font-size:1.5rem;">😐</div><div style="font-size:.6rem;color:var(--text3);margin-top:.2rem;font-weight:600;">Biasa</div></div>
+        <div class="mood-btn" onclick="pickMood(this,4,'😊','Baik')" style="text-align:center;padding:.65rem .3rem;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;"><div style="font-size:1.5rem;">😊</div><div style="font-size:.6rem;color:var(--text3);margin-top:.2rem;font-weight:600;">Baik</div></div>
+        <div class="mood-btn" onclick="pickMood(this,5,'🤩','Luar Biasa')" style="text-align:center;padding:.65rem .3rem;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;"><div style="font-size:1.5rem;">🤩</div><div style="font-size:.6rem;color:var(--text3);margin-top:.2rem;font-weight:600;">Luar Biasa</div></div>
+      </div>
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.5rem;">Tingkat energi hari ini?</div>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1.1rem;" id="energyBtns">
+        <button class="enbtn" onclick="pickEnergy(this,'Rendah sekali','🔋')" style="padding:.38rem .85rem;border-radius:100px;border:2px solid var(--border);background:var(--surface2);color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">🔋 Rendah sekali</button>
+        <button class="enbtn" onclick="pickEnergy(this,'Lumayan','🔋🔋')" style="padding:.38rem .85rem;border-radius:100px;border:2px solid var(--border);background:var(--surface2);color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">🔋🔋 Lumayan</button>
+        <button class="enbtn" onclick="pickEnergy(this,'Normal','⚡')" style="padding:.38rem .85rem;border-radius:100px;border:2px solid var(--border);background:var(--surface2);color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">⚡ Normal</button>
+        <button class="enbtn" onclick="pickEnergy(this,'Penuh semangat','⚡⚡')" style="padding:.38rem .85rem;border-radius:100px;border:2px solid var(--border);background:var(--surface2);color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">⚡⚡ Penuh semangat</button>
+      </div>
+      <button onclick="ciNext(2)" style="width:100%;padding:.85rem;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.25);transition:all .2s;">Lanjut →</button>
+    </div>
+
+    <!-- STEP 2: Aktivitas & Makanan -->
+    <div id="ci2" style="display:none;padding:1.1rem 1.4rem 1.4rem;">
+      <div style="font-size:.65rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.5rem;">Langkah 2 dari 3 — Aktivitas & Makan</div>
+
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">Aktivitas hari ini 🏃</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-bottom:.5rem;">Ceritakan bebas — kerja, olahraga, jalan kaki, dll.</div>
+      <textarea id="ciActivity" style="width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:11px;padding:.75rem 1rem;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none;resize:none;height:80px;transition:border-color .2s;line-height:1.6;margin-bottom:.25rem;" placeholder="Contoh: Kerja di kantor 8 jam, lalu jalan kaki 20 menit pulang. Nonton TV 2 jam malam..." maxlength="500" oninput="this.style.borderColor='var(--blue)'"></textarea>
+
+      <!-- Activity quick tags -->
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.9rem;" id="actTagsCI">
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Kerja di kantor" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">💻 Kerja kantoran</button>
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Jalan kaki" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🚶 Jalan kaki</button>
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Olahraga gym" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🏋️ Gym</button>
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Istirahat di rumah" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🏠 Di rumah</button>
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Banyak duduk" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🪑 Banyak duduk</button>
+        <button class="ciQuickTag" onclick="appendTA('ciActivity',this.dataset.v)" data-v="Naik turun tangga" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🪜 Tangga</button>
+      </div>
+
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">Makan apa saja hari ini? 🍽️</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-bottom:.5rem;">Sebut saja seadanya — tidak harus detail!</div>
+      <textarea id="ciFood" style="width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:11px;padding:.75rem 1rem;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none;resize:none;height:80px;transition:border-color .2s;line-height:1.6;margin-bottom:.25rem;" placeholder="Contoh: Sarapan nasi goreng, siang makan ayam + sayur, sore gorengan 2 buah, malam sup tahu..." maxlength="500" oninput="this.style.borderColor='var(--blue)'"></textarea>
+
+      <!-- Food quick tags -->
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.9rem;">
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Nasi + lauk" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🍚 Nasi + lauk</button>
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Gorengan" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🧆 Gorengan</button>
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Buah-buahan" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🍎 Buah</button>
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Minuman manis" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🥤 Minuman manis</button>
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Sayuran" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">🥦 Sayuran</button>
+        <button class="ciQuickTag" onclick="appendTA('ciFood',this.dataset.v)" data-v="Tidak makan siang" style="padding:.24rem .65rem;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">⏭️ Skip makan</button>
+      </div>
+
+      <div style="display:flex;gap:.6rem;">
+        <button onclick="ciNext(1)" style="flex:1;padding:.82rem;background:var(--surface2);color:var(--text2);border:2px solid var(--border);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">← Kembali</button>
+        <button onclick="ciNext(3)" style="flex:2;padding:.82rem;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.25);">Lanjut →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Catatan & Kirim -->
+    <div id="ci3" style="display:none;padding:1.1rem 1.4rem 1.4rem;">
+      <div style="font-size:.65rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.5rem;">Langkah 3 dari 3 — Catatan Tambahan</div>
+
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">Ada yang ingin dicatat? (Opsional) 💭</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-bottom:.5rem;">Keluhan fisik, perasaan, pencapaian, atau apapun yang terlintas.</div>
+      <textarea id="ciNote" style="width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:11px;padding:.75rem 1rem;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none;resize:none;height:90px;transition:border-color .2s;line-height:1.6;margin-bottom:.35rem;" placeholder="Opsional — Contoh: Perut terasa kembung, tidur tidak nyenyak, badan pegal setelah olahraga..." maxlength="300" oninput="this.style.borderColor='var(--blue)'"></textarea>
+
+      <!-- Apakah minum air cukup? -->
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.55rem;">Minum air putih hari ini cukup? 💧</div>
+      <div style="display:flex;gap:.45rem;margin-bottom:1.1rem;">
+        <button class="watbtn" onclick="pickWater(this,'kurang','🚨 Kurang')" style="flex:1;padding:.5rem;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">🚨 Kurang</button>
+        <button class="watbtn" onclick="pickWater(this,'cukup','✅ Cukup')" style="flex:1;padding:.5rem;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">✅ Cukup</button>
+        <button class="watbtn" onclick="pickWater(this,'banyak','💧💧 Banyak')" style="flex:1;padding:.5rem;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;">💧 Banyak</button>
+      </div>
+
+      <!-- Preview ringkasan sebelum kirim -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:12px;padding:.9rem;margin-bottom:1rem;">
+        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.55rem;">Ringkasan Check-in</div>
+        <div id="ciPreview" style="font-size:.76rem;color:var(--text2);line-height:1.8;"></div>
+      </div>
+
+      <div style="display:flex;gap:.6rem;">
+        <button onclick="ciNext(2)" style="flex:1;padding:.82rem;background:var(--surface2);color:var(--text2);border:2px solid var(--border);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">← Kembali</button>
+        <button onclick="submitCheckin()" id="ciSubmitBtn" style="flex:2;padding:.82rem;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(13,148,136,.25);display:flex;align-items:center;justify-content:center;gap:.4rem;"><span>🚀</span> Kirim & Analisa AI</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Hasil AI -->
+    <div id="ci4" style="display:none;padding:1.1rem 1.4rem 1.6rem;">
+      <div style="text-align:center;margin-bottom:1.1rem;">
+        <div style="font-size:2.5rem;margin-bottom:.4rem;">✅</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;color:var(--text);margin-bottom:.2rem;">Check-in tersimpan!</div>
+        <div style="font-size:.76rem;color:var(--text3);">AI sedang menganalisa harimu...</div>
+      </div>
+      <div style="background:rgba(37,99,235,.05);border:1.5px solid rgba(37,99,235,.15);border-left:3px solid var(--blue);border-radius:12px;padding:1rem;margin-bottom:1rem;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;">🤖 Analisa AI Harianmu</div>
+        <div id="ciAIResult" style="font-size:.8rem;color:var(--text2);line-height:1.8;">Menganalisa...</div>
+      </div>
+      <button onclick="closeCheckin();swJTab('today',document.getElementById('jTab1'))" style="width:100%;padding:.82rem;background:var(--blue);color:white;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.25);">Lihat Jurnal →</button>
+    </div>
+  </div>
+</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -1662,6 +1859,7 @@ function initApp(){
   document.getElementById('macL').textContent=Math.round(dc*.20/9)+'g';
   renderChart();renderTimeline(wtt,diff);renderFoodItems();renderFasting();renderAncaman(b,bs);
   renderQuotes();renderTips();renderDapur();renderDailyTip();updateFoodLog();
+  initJurnal();
 }
 
 /* ══════════ CHART ══════════ */
@@ -2086,6 +2284,429 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
   const el=document.getElementById(id);
   if(el){const min=+el.min,max=+el.max,v=+el.value;el.style.setProperty('--pct',((v-min)/(max-min)*100)+'%');}
 });
+
+/* ═══════════════════════════════════════════════
+   JURNAL HARIAN — Check-in System
+═══════════════════════════════════════════════ */
+
+// ── Storage helpers ──
+const JDB = {
+  key: 'slimiq_journal',
+  load() { try { return JSON.parse(localStorage.getItem(this.key)||'[]'); } catch { return []; } },
+  save(data) { localStorage.setItem(this.key, JSON.stringify(data)); },
+  add(entry) { const all=this.load(); all.unshift(entry); this.save(all); },
+  today() { const d=todayKey(); return this.load().find(e=>e.date===d)||null; },
+  thisWeek() {
+    const all=this.load(), now=new Date();
+    const mon=new Date(now); mon.setDate(now.getDate()-now.getDay()+1); mon.setHours(0,0,0,0);
+    return all.filter(e=>new Date(e.date)>=mon);
+  },
+  lastWeek() {
+    const all=this.load(), now=new Date();
+    const mon=new Date(now); mon.setDate(now.getDate()-now.getDay()+1); mon.setHours(0,0,0,0);
+    const prevMon=new Date(mon); prevMon.setDate(prevMon.getDate()-7);
+    return all.filter(e=>{ const d=new Date(e.date); return d>=prevMon && d<mon; });
+  }
+};
+
+function todayKey() {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function formatDateID(dateStr) {
+  const d=new Date(dateStr+'T00:00:00');
+  const days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── Check-in state ──
+const CI = { step:1, mood:0, moodEmoji:'😐', moodLabel:'Biasa', energy:'Normal', energyEmoji:'⚡', activity:'', food:'', note:'', water:'cukup', waterLabel:'✅ Cukup' };
+
+// ── Night reminder at 20:00 ──
+function initCheckinReminder() {
+  checkCheckinTime();
+  setInterval(checkCheckinTime, 60000); // check every minute
+}
+function checkCheckinTime() {
+  const now=new Date(), h=now.getHours(), m=now.getMinutes();
+  const banner=document.getElementById('checkinBanner');
+  if(!banner) return;
+  // Show banner between 20:00 – 23:59 if not already checked in today
+  if(h>=20 && h<=23) {
+    if(!JDB.today()) {
+      banner.style.display='block';
+      document.getElementById('jurnalDot').style.display='inline-block';
+    } else {
+      banner.style.display='none';
+      document.getElementById('jurnalDot').style.display='none';
+    }
+  } else {
+    banner.style.display='none';
+  }
+  // Also update the dot if journal has pending
+  if(!JDB.today() && h>=20) {
+    document.getElementById('jurnalDot').style.display='inline-block';
+  }
+}
+
+// ── Open / Close modal ──
+function openCheckin() {
+  // Reset CI state
+  CI.step=1; CI.mood=0; CI.moodEmoji='😐'; CI.moodLabel='Biasa';
+  CI.energy='Normal'; CI.energyEmoji='⚡'; CI.activity=''; CI.food=''; CI.note=''; CI.water='cukup'; CI.waterLabel='✅ Cukup';
+  // Reset inputs
+  ['ciActivity','ciFood','ciNote'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+  document.querySelectorAll('.mood-btn').forEach(b=>b.style.borderColor='var(--border)');
+  document.querySelectorAll('.enbtn,.watbtn').forEach(b=>{ b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--text2)'; });
+  // Update header labels
+  const today=formatDateID(todayKey());
+  document.getElementById('ciDateHdr').textContent=today;
+  // Show modal
+  const modal=document.getElementById('checkinModal');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+  ciShowStep(1);
+}
+function closeCheckin() {
+  document.getElementById('checkinModal').style.display='none';
+  document.body.style.overflow='';
+}
+// close on backdrop click
+document.getElementById('checkinModal').addEventListener('click', function(e){ if(e.target===this) closeCheckin(); });
+
+function ciShowStep(n) {
+  [1,2,3,4].forEach(i=>{ const el=document.getElementById('ci'+i); if(el)el.style.display='none'; });
+  document.getElementById('ci'+n).style.display='block';
+  ['cib1','cib2','cib3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.background = i<n ? 'var(--blue)' : 'var(--border)';
+  });
+  CI.step=n;
+}
+function ciNext(n) {
+  if(n===2) { if(!CI.mood){toast('⚠️ Pilih mood harianmu dulu!');return;} }
+  if(n===3) { CI.activity=document.getElementById('ciActivity').value.trim(); CI.food=document.getElementById('ciFood').value.trim(); buildCIPreview(); }
+  if(n===4) { CI.note=document.getElementById('ciNote').value.trim(); }
+  ciShowStep(n);
+}
+
+function pickMood(el,score,emoji,label) {
+  document.querySelectorAll('.mood-btn').forEach(b=>{ b.style.borderColor='var(--border)'; b.style.background='white'; b.style.transform='scale(1)'; });
+  el.style.borderColor='var(--blue)'; el.style.background='var(--blue-lt)'; el.style.transform='scale(1.05)';
+  CI.mood=score; CI.moodEmoji=emoji; CI.moodLabel=label;
+}
+function pickEnergy(el,label,emoji) {
+  document.querySelectorAll('.enbtn').forEach(b=>{ b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--text2)'; });
+  el.style.background='var(--blue)'; el.style.borderColor='var(--blue)'; el.style.color='white';
+  CI.energy=label; CI.energyEmoji=emoji;
+}
+function pickWater(el,val,label) {
+  document.querySelectorAll('.watbtn').forEach(b=>{ b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--text2)'; });
+  el.style.background='var(--teal)'; el.style.borderColor='var(--teal)'; el.style.color='white';
+  CI.water=val; CI.waterLabel=label;
+}
+function appendTA(id,val) {
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.value += (el.value?', ':'')+val;
+  el.style.borderColor='var(--blue)';
+}
+function buildCIPreview() {
+  const lines=[];
+  lines.push(`${CI.moodEmoji} <b>Mood:</b> ${CI.moodLabel} (${CI.mood}/5)`);
+  lines.push(`${CI.energyEmoji} <b>Energi:</b> ${CI.energy}`);
+  if(CI.activity) lines.push(`🏃 <b>Aktivitas:</b> ${CI.activity.slice(0,60)}${CI.activity.length>60?'...':''}`);
+  if(CI.food) lines.push(`🍽️ <b>Makan:</b> ${CI.food.slice(0,60)}${CI.food.length>60?'...':''}`);
+  document.getElementById('ciPreview').innerHTML = lines.join('<br>');
+}
+
+async function submitCheckin() {
+  CI.note = document.getElementById('ciNote').value.trim();
+  const btn=document.getElementById('ciSubmitBtn');
+  btn.innerHTML='<span class="spin" style="animation:spin .8s linear infinite;display:inline-block;">⏳</span> Menganalisa...';
+  btn.style.pointerEvents='none';
+  ciShowStep(4);
+
+  // Build entry object
+  const entry = {
+    date: todayKey(),
+    time: new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+    mood: CI.mood, moodEmoji: CI.moodEmoji, moodLabel: CI.moodLabel,
+    energy: CI.energy, energyEmoji: CI.energyEmoji,
+    activity: CI.activity, food: CI.food, note: CI.note,
+    water: CI.water, waterLabel: CI.waterLabel,
+    kcalToday: S.kcal,
+    aiAnalysis: null,
+    weeklyReport: null
+  };
+
+  // Call AI for daily analysis
+  const b=calcBMI(), dc=dietCal();
+  const prompt=`Kamu SlimIQ AI Coach Indonesia. Data pengguna: ${S.name}, ${S.jobLabel}, BB ${S.W}kg, BMI ${b}, target ${S.T}kg, budget ${dc} kkal/hari.
+
+Check-in malam ini:
+- Mood: ${entry.moodLabel} (${entry.mood}/5)
+- Energi: ${entry.energy}
+- Aktivitas: ${entry.activity||'tidak disebutkan'}
+- Makan: ${entry.food||'tidak disebutkan'}
+- Minum air: ${entry.waterLabel}
+- Kalori tercatat: ${entry.kcalToday} kkal
+- Catatan: ${entry.note||'-'}
+
+Berikan analisa harian dalam format berikut (singkat, hangat, personal, max 180 kata):
+1. 🌟 **Highlight Hari Ini** — 1 hal positif dari harinya
+2. ⚠️ **Perlu Diperbaiki** — 1–2 hal konkret untuk besok
+3. 💡 **Saran Besok** — 1 aksi spesifik untuk besok pagi berdasarkan pekerjaannya (${S.jobLabel})
+4. ❤️ **Pesan Penutup** — kalimat motivasi singkat yang personal`;
+
+  const aiText = await callGemini(prompt);
+  const fallback = `🌟 <b>Highlight Hari Ini</b><br>Kamu sudah meluangkan waktu untuk check-in — itu sendiri sudah keren! 💪<br><br>⚠️ <b>Perlu Diperbaiki</b><br>${entry.water==='kurang'?'Minum air kurang mencukupi. Siapkan botol air 1.5L di meja besok.':'Pertahankan konsistensi makan teratur, hindari jeda terlalu panjang.'}<br><br>💡 <b>Saran Besok</b><br>Sebagai ${S.jobLabel}, coba ${S.job==='desk'?'berdiri & jalan kecil 5 menit setiap jam kerja':'mulai hari dengan protein tinggi agar energi stabil sepanjang hari'}.<br><br>❤️ Setiap hari kecil yang konsisten adalah fondasi perubahan besar. Sampai besok, ${S.name}! 🌙`;
+
+  entry.aiAnalysis = aiText || fallback;
+  document.getElementById('ciAIResult').innerHTML = (entry.aiAnalysis).replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+
+  // Save to local storage
+  JDB.add(entry);
+
+  // Check if weekly report should be generated
+  const weekEntries = JDB.thisWeek();
+  if(weekEntries.length >= 3 && weekEntries.length % 3 === 0) {
+    generateWeeklyReport(weekEntries);
+  }
+
+  // Update UI
+  document.getElementById('jurnalDot').style.display='none';
+  document.getElementById('checkinBanner').style.display='none';
+  btn.innerHTML='<span>🚀</span> Kirim & Analisa AI';
+  btn.style.pointerEvents='auto';
+  toast('✅ Check-in tersimpan! AI analisa siap.');
+  renderJurnalToday();
+  renderJurnalHistory();
+  renderWeeklySection();
+}
+
+// ── Weekly Report Generator ──
+async function generateWeeklyReport(entries) {
+  const summary = entries.map((e,i)=>`Hari ${i+1} (${formatDateID(e.date)}): Mood ${e.moodLabel}, Energi ${e.energy}, Makan: ${e.food||'-'}, Aktivitas: ${e.activity||'-'}, Air: ${e.waterLabel}`).join('\n');
+  const b=calcBMI(), dc=dietCal();
+  const prompt=`Kamu SlimIQ AI Coach. Pengguna: ${S.name}, ${S.jobLabel}, BMI ${b}, target ${S.T}kg.
+
+Laporan ${entries.length} hari terakhir:
+${summary}
+
+Buat laporan mingguan personal (max 250 kata) dengan format:
+📊 **Ringkasan Minggu Ini**
+— Rata-rata mood, energi, pola makan
+
+🏆 **Pencapaian Terbaik**
+— 1–2 hal yang sudah dilakukan dengan baik
+
+📈 **Pola yang Terdeteksi**
+— Tren positif atau negatif dari data hariannya
+
+🎯 **Target Minggu Depan**
+— 3 hal konkret & spesifik yang harus dilakukan minggu depan
+
+❤️ **Pesan Mingguan**
+— Pesan motivasi personal berdasarkan kondisinya`;
+
+  const weeklyText = await callGemini(prompt);
+  if(weeklyText) {
+    // Save weekly report to last entry
+    const all = JDB.load();
+    if(all.length > 0) { all[0].weeklyReport = weeklyText; JDB.save(all); }
+    renderWeeklySection();
+  }
+}
+
+// ── Render functions ──
+function renderJurnalToday() {
+  const entry = JDB.today();
+  if(!entry) {
+    document.getElementById('jTodayEmpty').style.display='block';
+    document.getElementById('jTodayDone').style.display='none';
+    return;
+  }
+  document.getElementById('jTodayEmpty').style.display='none';
+  document.getElementById('jTodayDone').style.display='block';
+
+  const moodColors={1:'#ef4444',2:'#f97316',3:'#94a3b8',4:'#10b981',5:'#2563eb'};
+  const moodBgs  ={1:'rgba(239,68,68,.08)',2:'rgba(249,115,22,.08)',3:'rgba(148,163,184,.08)',4:'rgba(16,185,129,.08)',5:'rgba(37,99,235,.08)'};
+  const mc=moodColors[entry.mood]||'var(--blue)', mb=moodBgs[entry.mood]||'var(--blue-lt)';
+
+  document.getElementById('jTodaySummaryCard').innerHTML=`
+    <div class="card" style="margin-bottom:.8rem;border-color:${mc}30;background:${mb};">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
+        <div>
+          <div style="font-size:.6rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">${formatDateID(entry.date)} · ${entry.time}</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;color:var(--text);margin-top:.18rem;">Check-in tersimpan ✅</div>
+        </div>
+        <div style="font-size:2.4rem;">${entry.moodEmoji}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.75rem;">
+        <div style="background:white;border:1.5px solid var(--border);border-radius:10px;padding:.55rem;text-align:center;">
+          <div style="font-size:1rem;">${entry.moodEmoji}</div>
+          <div style="font-size:.58rem;color:var(--text3);margin-top:.1rem;font-weight:600;">Mood</div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--text);">${entry.moodLabel}</div>
+        </div>
+        <div style="background:white;border:1.5px solid var(--border);border-radius:10px;padding:.55rem;text-align:center;">
+          <div style="font-size:1rem;">${entry.energyEmoji}</div>
+          <div style="font-size:.58rem;color:var(--text3);margin-top:.1rem;font-weight:600;">Energi</div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--text);">${entry.energy}</div>
+        </div>
+        <div style="background:white;border:1.5px solid var(--border);border-radius:10px;padding:.55rem;text-align:center;">
+          <div style="font-size:1rem;">${entry.water==='kurang'?'🚨':entry.water==='banyak'?'💧💧':'💧'}</div>
+          <div style="font-size:.58rem;color:var(--text3);margin-top:.1rem;font-weight:600;">Air</div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--text);">${entry.water==='kurang'?'Kurang':entry.water==='banyak'?'Banyak':'Cukup'}</div>
+        </div>
+      </div>
+      ${entry.activity?`<div style="font-size:.73rem;color:var(--text2);margin-bottom:.3rem;padding:.5rem .7rem;background:white;border-radius:9px;border:1px solid var(--border);line-height:1.5;"><b style="color:var(--text);">🏃 Aktivitas:</b> ${entry.activity}</div>`:''}
+      ${entry.food?`<div style="font-size:.73rem;color:var(--text2);padding:.5rem .7rem;background:white;border-radius:9px;border:1px solid var(--border);line-height:1.5;"><b style="color:var(--text);">🍽️ Makan:</b> ${entry.food}</div>`:''}
+    </div>`;
+
+  if(entry.aiAnalysis) {
+    document.getElementById('jTodayAIMsg').innerHTML = entry.aiAnalysis.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  }
+}
+
+function renderJurnalHistory() {
+  const all = JDB.load();
+  const wrap = document.getElementById('jHistoryList');
+  if(!all.length) {
+    wrap.innerHTML=`<div class="card" style="text-align:center;padding:2rem 1.2rem;"><div style="font-size:2.5rem;margin-bottom:.6rem;">📅</div><div style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text);margin-bottom:.3rem;">Belum ada riwayat</div><div style="font-size:.76rem;color:var(--text3);">Lakukan check-in pertamamu malam ini!</div></div>`;
+    return;
+  }
+  const moodColors={1:'#ef4444',2:'#f97316',3:'#94a3b8',4:'#10b981',5:'#2563eb'};
+  wrap.innerHTML = all.map((e,idx)=>`
+    <div class="card" style="margin-bottom:.7rem;cursor:pointer;transition:all .2s;" onclick="toggleHistDetail(${idx})" id="hcard${idx}">
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${moodColors[e.mood]||'var(--blue)'}18;border:2px solid ${moodColors[e.mood]||'var(--blue)'}40;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">${e.moodEmoji}</div>
+        <div style="flex:1;">
+          <div style="font-size:.75rem;font-weight:700;color:var(--text);">${formatDateID(e.date)}</div>
+          <div style="font-size:.67rem;color:var(--text3);margin-top:.1rem;">${e.energyEmoji} ${e.energy} · 💧 ${e.water==='kurang'?'Kurang':e.water==='banyak'?'Banyak':'Cukup'} · 🔥 ${e.kcalToday||0} kkal</div>
+        </div>
+        <div style="font-size:.7rem;color:${moodColors[e.mood]||'var(--blue)'};font-weight:800;">${e.mood}/5</div>
+        <div style="font-size:.7rem;color:var(--text3);" id="harrow${idx}">▼</div>
+      </div>
+      <div id="hdet${idx}" style="display:none;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);">
+        ${e.activity?`<div style="font-size:.73rem;color:var(--text2);margin-bottom:.35rem;line-height:1.6;padding:.5rem .7rem;background:var(--surface2);border-radius:9px;"><b style="color:var(--text);">🏃 Aktivitas</b><br>${e.activity}</div>`:''}
+        ${e.food?`<div style="font-size:.73rem;color:var(--text2);margin-bottom:.35rem;line-height:1.6;padding:.5rem .7rem;background:var(--surface2);border-radius:9px;"><b style="color:var(--text);">🍽️ Makan</b><br>${e.food}</div>`:''}
+        ${e.note?`<div style="font-size:.73rem;color:var(--text2);margin-bottom:.35rem;line-height:1.6;padding:.5rem .7rem;background:var(--surface2);border-radius:9px;"><b style="color:var(--text);">💭 Catatan</b><br>${e.note}</div>`:''}
+        ${e.aiAnalysis?`<div style="font-size:.73rem;color:var(--text2);line-height:1.75;padding:.6rem .8rem;background:rgba(37,99,235,.04);border:1.5px solid rgba(37,99,235,.12);border-left:3px solid var(--blue);border-radius:9px;"><b style="color:var(--blue);font-size:.62rem;text-transform:uppercase;letter-spacing:1px;">🤖 Analisa AI</b><br><br>${e.aiAnalysis.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>')}</div>`:''}
+        ${e.weeklyReport?`<div style="margin-top:.6rem;font-size:.73rem;color:var(--text2);line-height:1.75;padding:.6rem .8rem;background:rgba(13,148,136,.04);border:1.5px solid rgba(13,148,136,.18);border-left:3px solid var(--teal);border-radius:9px;"><b style="color:var(--teal);font-size:.62rem;text-transform:uppercase;letter-spacing:1px;">📊 Laporan Mingguan AI</b><br><br>${e.weeklyReport.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>')}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleHistDetail(idx) {
+  const det=document.getElementById('hdet'+idx);
+  const arr=document.getElementById('harrow'+idx);
+  const open=det.style.display==='none';
+  det.style.display=open?'block':'none';
+  arr.textContent=open?'▲':'▼';
+}
+
+function renderWeeklySection() {
+  const week=JDB.thisWeek();
+  const all=JDB.load();
+  // Find any entry with weeklyReport
+  const withReport=all.find(e=>e.weeklyReport);
+
+  if(week.length<3 && !withReport) {
+    document.getElementById('jWeeklyEmpty').style.display='block';
+    document.getElementById('jWeeklyContent').style.display='none';
+    document.getElementById('jWeeklyEmpty').querySelector('div:nth-child(3)').innerHTML=
+      `Isi check-in minimal <b>3 hari</b> dalam seminggu untuk mendapatkan laporan mingguan dari AI. Sudah <b>${week.length} hari</b> minggu ini.`;
+    return;
+  }
+
+  document.getElementById('jWeeklyEmpty').style.display='none';
+  document.getElementById('jWeeklyContent').style.display='block';
+
+  // Build mood chart mini
+  const days7=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const entry=all.find(e=>e.date===k);days7.push({date:k,d,entry});}
+  const dayNames=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const moodColors={1:'#ef4444',2:'#f97316',3:'#94a3b8',4:'#10b981',5:'#2563eb'};
+  const moodBars=days7.map(dy=>{
+    const filled=!!dy.entry;
+    const mc=filled?(moodColors[dy.entry.mood]||'var(--blue)'):'var(--border)';
+    const h=filled?`${(dy.entry.mood/5)*56+8}px`:'8px';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;">
+      <div style="font-size:.75rem;">${filled?dy.entry.moodEmoji:'—'}</div>
+      <div style="width:28px;height:${h};background:${mc};border-radius:4px;transition:height .5s;"></div>
+      <div style="font-size:.6rem;color:${filled?'var(--text)':'var(--text3)'};font-weight:${filled?700:400};">${dayNames[dy.d.getDay()]}</div>
+    </div>`;
+  }).join('');
+
+  // Stats
+  const avgMood = week.length ? (week.reduce((s,e)=>s+e.mood,0)/week.length).toFixed(1) : '-';
+  const waterGood = week.filter(e=>e.water!=='kurang').length;
+  const avgKcal = week.length ? Math.round(week.reduce((s,e)=>s+(e.kcalToday||0),0)/week.length) : 0;
+
+  document.getElementById('jWeeklyCard').innerHTML=`
+    <div class="card" style="margin-bottom:.8rem;">
+      <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(37,99,235,.1);">📊</div> Mood 7 Hari Terakhir</div></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-around;height:88px;padding:0 .3rem;">${moodBars}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.85rem;">
+      <div class="stat-box sb-blue"><div class="sb-lbl">Avg Mood</div><div class="sb-val">${avgMood}<small>/5</small></div><div class="sb-sub">Minggu ini</div></div>
+      <div class="stat-box sb-teal"><div class="sb-lbl">Hidrasi OK</div><div class="sb-val">${waterGood}<small>/${week.length}</small></div><div class="sb-sub">hari cukup</div></div>
+      <div class="stat-box sb-green"><div class="sb-lbl">Avg Kalori</div><div class="sb-val">${avgKcal}<small>kkal</small></div><div class="sb-sub">per hari</div></div>
+    </div>
+    ${withReport?`<div class="card" style="border-color:rgba(13,148,136,.25);background:rgba(13,148,136,.03);">
+      <div class="card-head"><div class="card-title"><div class="card-icon" style="background:rgba(13,148,136,.12);">🤖</div> Laporan Mingguan AI</div><span class="tag tt">Weekly</span></div>
+      <div style="font-size:.79rem;color:var(--text2);line-height:1.85;">${withReport.weeklyReport.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>')}</div>
+    </div>`:`<div class="card" style="text-align:center;padding:1.2rem;"><div style="font-size:1.8rem;">⏳</div><div style="font-size:.78rem;color:var(--text3);margin-top:.4rem;">Laporan AI akan muncul otomatis setelah <b>3 check-in</b>.<br>Sudah <b>${week.length}</b> hari — lanjutkan! 💪</div></div>`}
+    ${week.length>=3?`<button onclick="generateWeeklyReport(JDB.thisWeek())" style="width:100%;margin-top:.6rem;padding:.75rem;background:rgba(13,148,136,.08);border:1.5px solid rgba(13,148,136,.25);color:var(--teal);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.4rem;">🔄 Perbarui Laporan Mingguan</button>`:''}
+  `;
+}
+
+// ── Tab switcher ──
+function swJTab(tab, el) {
+  document.querySelectorAll('#jTab1,#jTab2,#jTab3').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('jToday').style.display   = tab==='today'  ?'block':'none';
+  document.getElementById('jHistory').style.display = tab==='history'?'block':'none';
+  document.getElementById('jWeekly').style.display  = tab==='weekly' ?'block':'none';
+  if(tab==='history') renderJurnalHistory();
+  if(tab==='weekly')  renderWeeklySection();
+}
+
+// ── Dashboard: inject jurnal today's mood card ──
+function renderJurnalDashPeek() {
+  const entry = JDB.today();
+  const el = document.getElementById('jurnalDashPeek');
+  if(!el) return;
+  if(!entry) {
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:.65rem;padding:.7rem;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.2);border-radius:11px;cursor:pointer;" onclick="nav('jurnal',document.getElementById('jurnalPill'))">
+      <div style="font-size:1.2rem;">📝</div>
+      <div style="flex:1;"><div style="font-size:.78rem;font-weight:700;color:var(--text);">Check-in malam belum diisi</div><div style="font-size:.67rem;color:var(--text3);">Ceritakan harimu ke AI Coach sebelum tidur</div></div>
+      <div style="font-size:.72rem;color:var(--amber);font-weight:700;">Isi →</div>
+    </div>`;
+  } else {
+    const moodColors={1:'#ef4444',2:'#f97316',3:'#94a3b8',4:'#10b981',5:'#2563eb'};
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:.65rem;padding:.7rem;background:rgba(16,185,129,.05);border:1.5px solid rgba(16,185,129,.2);border-radius:11px;cursor:pointer;" onclick="nav('jurnal',document.getElementById('jurnalPill'))">
+      <div style="font-size:1.3rem;">${entry.moodEmoji}</div>
+      <div style="flex:1;"><div style="font-size:.78rem;font-weight:700;color:var(--text);">Check-in selesai ✅</div><div style="font-size:.67rem;color:var(--text3);">Mood ${entry.moodLabel} · ${entry.energy} · ${entry.waterLabel}</div></div>
+      <div style="font-size:.72rem;color:var(--green);font-weight:700;">Lihat →</div>
+    </div>`;
+  }
+}
+
+// ── Init jurnal on app start ──
+function initJurnal() {
+  renderJurnalToday();
+  renderJurnalHistory();
+  renderWeeklySection();
+  initCheckinReminder();
+  renderJurnalDashPeek();
+  // Set check-in date labels
+  const today = formatDateID(todayKey());
+  const el1=document.getElementById('checkinDateLbl'); if(el1) el1.textContent=today;
+  const nm=document.getElementById('checkinName'); if(nm) nm.textContent=S.name||'Pejuang';
+}
 </script>
 </body>
 </html>
